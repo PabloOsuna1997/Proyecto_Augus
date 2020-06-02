@@ -6,20 +6,34 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>962</width>
-    <height>669</height>
+    <width>877</width>
+    <height>757</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Augus</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>471</width>
+      <height>541</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>-1</number>
+    </property>
+   </widget>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>962</width>
+     <width>877</width>
      <height>21</height>
     </rect>
    </property>
