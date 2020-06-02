@@ -89,6 +89,8 @@ class Ui_Augus(object):
         self.actionNuevo.triggered.connect(lambda : self.fn_Nuevo())
         self.actionAbrir.triggered.connect(lambda : self.fn_Abrir())
         self.actionAscendente.triggered.connect(lambda : self.fn_Ejecutar())
+        self.actionGuardar.triggered.connect(lambda : self.fn_Guardar())
+        self.actionGuardar_Como.triggered.connect(lambda : self.fn_Guardar_Como())
 
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
@@ -150,6 +152,28 @@ class Ui_Augus(object):
         content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
         print("contenido a ejecutar: " + content)
 
+    def fn_Guardar(self):
+        #content to save
+        content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+        path = self.tabWidget.tabText(self.tabWidget.currentIndex())
+        #print(path)
+        print("writing to file.")
+        f=open(path,"w")
+        f.write(content)
+        f.close()
+    
+    def fn_Guardar_Como(self):
+        content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+        filename = QFileDialog.getSaveFileName(None)
+        path = filename[0]
+        
+        print("writing to file.")
+        f=open(path,"w+")
+        f.write(content)
+        f.close()
+
+        #updating title on the tab
+        self.tabWidget.setTabText(self.tabWidget.currentIndex(), path)
 
 
 if __name__ == "__main__":
