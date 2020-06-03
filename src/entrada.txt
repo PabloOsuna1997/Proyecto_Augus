@@ -1,0 +1,19 @@
+main:
+
+    #comentario 1
+    print('hola');
+    if('hola') goto etiqueta1;
+    unset($t0);
+    exit;
+    goto etiqueta2;
+    $t1 = 5;
+    $t2[4] = 6 < 7;
+    $t2[4] = 6 << 7;
+    $t2[4] = 'hola';
+    $t2[4] = $t3;
+    $t2[4] = (int)$t3;
+    $t3 = $t3[6+7];
+
+etiqueta1:
+
+ettiqueta2:
