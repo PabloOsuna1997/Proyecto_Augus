@@ -146,53 +146,138 @@ lexer = lex.lex()
 
 #sintactic
 
+#construction the ast
+from expresiones import *
+from instrucciones import *
+
 #definition of grammar 
 
 def p_init(t):
     'S : A'
+    #code (sintetize result the A to S)
+    t[0] = t[1]
+    #print("result the t[0]: " + str(t[0]))
 
 def p_main(t):
     'A : MAIN DOSPUNTOS SENTENCIAS'
+   
+    #t[1].append(t[2])
+    #t[1].append(t[3])
+    #solo agrego las sentencias 
+    t[0] = t[3]
 
 def p_sentencias_lista(t):
-    '''SENTENCIAS   : SENTENCIAS SENTENCIA
-                    | SENTENCIA '''
+    'SENTENCIAS   : SENTENCIAS SENTENCIA'
+    t[1].append(t[2])
+    t[0] = t[1]
+
+def p_sentecias_sentencia(t):
+    'SENTENCIAS     : SENTENCIA'
+    t[0] = [t[1]]
 
 def p_sentencia(t):
     '''SENTENCIA    : ETIQUETA
                     | INSTRUCCIONES
                     | DECLARACIONES'''
+
+    t[0] = t[1]
                 
 def p_etiqueta(t):
     # i call label to recognize the label
 
-    'ETIQUETA   : LABEL DOSPUNTOS'  
+    'ETIQUETA   : LABEL DOSPUNTOS' 
+    t[0] = t[1] 
 
 def p_instrucciones(t):
-    '''INSTRUCCIONES    : PRINT PARIZQ CADENA PARDER PUNTOCOMA
-                        | IF PARIZQ CADENA PARDER GOTO LABEL PUNTOCOMA
+    '''INSTRUCCIONES    : PRINT PARIZQ EXPRESION PARDER PUNTOCOMA
+                        | IF PARIZQ EXPRESION PARDER GOTO LABEL PUNTOCOMA
                         | UNSET PARIZQ ID PARDER PUNTOCOMA
                         | EXIT PUNTOCOMA
                         | GOTO LABEL PUNTOCOMA'''
+
+    if(t[1] == 'print'): t[0] = Print_(t[3])
+    elif(t[1] == 'if'): t[0] = If(t[3])
+    elif(t[1] == 'unset'): t[0] = Unset(t[3])
+    elif(t[1] == 'goto'): t[0] = Unset(t[2])
+    elif(t[1] == 'exit'): t[0] = Exit();
       
 def p_declaraciones(t):
     'DECLARACIONES  : ID ARRAY_'
+    
+    #insertion a new variable
+    t[0] = Declaration(t[1], t[2])
 
 def p_array(t):
-    '''ARRAY_    : CORIZQ F CORDER IGUAL EXPRESION PUNTOCOMA
+    '''ARRAY_    : CORIZQ EXPRESION CORDER IGUAL EXPRESION PUNTOCOMA
                 | IGUAL EXPRESION PUNTOCOMA'''
 
+    if(t[0] == '='): t[1] = t[2]  #if expresion is array, expression contain 'array'
+
 def p_expresion(t):
-    '''EXPRESION    : F OPERADOR F
+    '''EXPRESION    :  ATOMICO
+                    | FUNCION'''
+    t[0] = t[1]
+
+def p_expresion_operacion(t):
+    'EXPRESION    : OPERACION'
+    t[0] = StringAritmetic(t[1])
+
+def p_operacion(t):
+    '''OPERACION    : F OPERADOR F
                     | MENOS F
                     | NOTLOGICA F
                     | NOTBIT F
-                    | F
-                    | ABS PARIZQ EXPRESION PARDER
+                    | ID CORIZQ EXPRESION CORDER '''
+
+    #code
+    #aritmetics
+    if(t[2] == '+'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS)
+    elif(t[2] == '-'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS)
+    elif(t[2] == '*'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR)
+    elif(t[2] == '/'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.DIV)
+    elif(t[2] == '%'): t[0] = BinaryExpression(t[1],t[3], Aritmetics.MODULO)
+    #unitaries
+    elif(t[1] == '-'): t[0] = NegativeNumber(t[2])
+    elif(t[1] == '!'): t[0] = Not(t[2])
+    elif(t[1] == '~'): t[0] = NotBit(t[2])
+    #relational and logical
+    elif(t[2] == '&&'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.AND)
+    elif(t[2] == '||'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.OR)
+    elif(t[2] == 'xor'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.XOR)
+    elif(t[2] == '=='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.IGUALQUE)
+    elif(t[2] == '!='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.DIFERENTE)
+    elif(t[2] == '>='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL)
+    elif(t[2] == '<='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL)
+    elif(t[2] == '>'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MAYORQUE)
+    elif(t[2] == '<'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MENORQUE)
+    #bit to bit
+    elif(t[2] == '&'): t[0] = RelationalBit(t[1],t[3], BitToBit.ANDBIT)
+    elif(t[2] == '|'): t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT)
+    elif(t[2] == '^'): t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT)
+    elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI)
+    elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD)
+    
+    else: t[0] = IdentifierArray(t[1],t[3])
+
+
+def p_numero(t):
+        'ATOMICO     : F'
+        t[0] = t[1]
+
+def p_funcion(t):
+    '''FUNCION      : ABS PARIZQ EXPRESION PARDER
                     | PARIZQ TIPO PARDER ID
                     | READ PARIZQ PARDER
-                    | ARRAY PARIZQ PARDER
-                    | ID CORIZQ EXPRESION CORDER '''
+                    | ARRAY PARIZQ PARDER'''
+
+    if(t[1] == 'abs'): t[0] = Abs(t[3])
+    elif(t[1] == 'read'): t[0] = ReadConsole()
+    elif(t[1] == '('):
+        if(t[2] == 'int'): t[0] = toInt(t[4])
+        elif(t[2] == 'float'): t[0] = toFloat(t[4])
+        elif(t[2] == 'char'): t[0] = toChar(t[4])
+    elif(t[1] == 'array'): t[0] = t[1]  #devolvemos la palabra array
+
 
 def p_operador(t):
     '''OPERADOR     :   MAS
@@ -215,15 +300,26 @@ def p_operador(t):
                         | SHIFTIZQ
                         | SHIFTDER'''
 
+    t[0] = t[1]
+
 def p_tipo(t):
     ''' TIPO    : INT
                 | FLOAT
                 | CHAR'''
+    
+    t[0] = t[1]
 
-def p_f(t):
-    '''F    : NUMERO
-            | ID
-            | CADENA'''
+def p_f_numero(t):
+    'F  : NUMERO'
+    t[0] = Number(t[1])
+
+def p_f_id(t):
+    'F  : ID'
+    t[0] = Identifier(t[1])
+
+def p_f_cadena(t):
+    'F  : CADENA'
+    t[0] = String_(t[1])
 
 def p_error(t):
     print("Error sintáctico en '%s'" % t.value)

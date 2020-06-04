@@ -1,7 +1,8 @@
 main:
 
     #comentario 1
-    print('hola');
+    print('print de prueba');
+    print(4+5);
     if('hola') goto etiqueta1;
     unset($t0);
     exit;

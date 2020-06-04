@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 import gramatica as grammar
+import ejecucion as execute
 import sys 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
@@ -175,12 +176,16 @@ class Ui_Augus(object):
 
     def fn_Ejecutar_Ascendente(self):
         try:
-            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-            print("contenido a ejecutar de manera ascendente: " + content)
+            #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            #print("contenido a ejecutar de manera ascendente: " + content)
 
+            f = open("../entrada.txt", "r")
+            content = f.read()
             result = grammar.parse(content)
-            print(result)      
-            print("Se reconocio la cadena de entrada.")
+            #print(result)
+            #run execute
+            execute.execute(result)      
+            #print("Se reconocio la cadena de entrada + " + str(result))
         except:
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Empty Area.")
