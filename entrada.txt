@@ -2,7 +2,14 @@ main:
 
     #comentario 1
     print('print de prueba');
-    print(4+5);
+    $t1 = -10;
+    $t2 = 10*6;
+    print($t1);
+    print($t2);
+    $t1 = 10*5;
+    print($t1);
+    $t3 = 'prueba string';
+    print($t3);
     if('hola') goto etiqueta1;
     unset($t0);
     exit;

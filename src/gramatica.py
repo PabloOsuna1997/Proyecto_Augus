@@ -119,7 +119,7 @@ def t_CHAR_(t):
     return t
 
 def t_CADENA(t):
-    r'\'.*?\''
+    r'(\' || \").*?(\' || \")'
     t.value = t.value[1:-1]
     return t
 
@@ -160,9 +160,7 @@ def p_init(t):
 
 def p_main(t):
     'A : MAIN DOSPUNTOS SENTENCIAS'
-   
-    #t[1].append(t[2])
-    #t[1].append(t[3])
+
     #solo agrego las sentencias 
     t[0] = t[3]
 
@@ -211,16 +209,13 @@ def p_array(t):
     '''ARRAY_    : CORIZQ EXPRESION CORDER IGUAL EXPRESION PUNTOCOMA
                 | IGUAL EXPRESION PUNTOCOMA'''
 
-    if(t[0] == '='): t[1] = t[2]  #if expresion is array, expression contain 'array'
+    if(t[1] == '='): t[0] = t[2]  #if expresion is array, expression contain 'array'
 
 def p_expresion(t):
     '''EXPRESION    :  ATOMICO
-                    | FUNCION'''
+                    | FUNCION
+                    | OPERACION'''
     t[0] = t[1]
-
-def p_expresion_operacion(t):
-    'EXPRESION    : OPERACION'
-    t[0] = StringAritmetic(t[1])
 
 def p_operacion(t):
     '''OPERACION    : F OPERADOR F
@@ -241,15 +236,15 @@ def p_operacion(t):
     elif(t[1] == '!'): t[0] = Not(t[2])
     elif(t[1] == '~'): t[0] = NotBit(t[2])
     #relational and logical
-    elif(t[2] == '&&'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.AND)
-    elif(t[2] == '||'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.OR)
-    elif(t[2] == 'xor'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.XOR)
-    elif(t[2] == '=='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.IGUALQUE)
-    elif(t[2] == '!='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.DIFERENTE)
-    elif(t[2] == '>='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL)
-    elif(t[2] == '<='): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL)
-    elif(t[2] == '>'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MAYORQUE)
-    elif(t[2] == '<'): t[0] = RelationAndRelational(t[1],t[3], LogicsRelational.MENORQUE)
+    elif(t[2] == '&&'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.AND)
+    elif(t[2] == '||'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.OR)
+    elif(t[2] == 'xor'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.XOR)
+    elif(t[2] == '=='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.IGUALQUE)
+    elif(t[2] == '!='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.DIFERENTE)
+    elif(t[2] == '>='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL)
+    elif(t[2] == '<='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL)
+    elif(t[2] == '>'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE)
+    elif(t[2] == '<'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE)
     #bit to bit
     elif(t[2] == '&'): t[0] = RelationalBit(t[1],t[3], BitToBit.ANDBIT)
     elif(t[2] == '|'): t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT)

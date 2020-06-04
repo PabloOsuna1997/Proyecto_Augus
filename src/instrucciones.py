@@ -10,9 +10,9 @@ class Print_(Instruction) :
 class Declaration(Instruction):
     '''variables declarations'''
 
-    def __init__(self, id, content):
+    def __init__(self, id, val):
         self.id = id
-        self.content = content
+        self.val = val
 
 class Unset(Instruction):
     '''variables destruction'''

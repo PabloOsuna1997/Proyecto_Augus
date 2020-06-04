@@ -175,7 +175,7 @@ class Ui_Augus(object):
             print("closing file dialog.")
 
     def fn_Ejecutar_Ascendente(self):
-        try:
+        #try:
             #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             #print("contenido a ejecutar de manera ascendente: " + content)
 
@@ -184,12 +184,12 @@ class Ui_Augus(object):
             result = grammar.parse(content)
             #print(result)
             #run execute
-            execute.execute(result)      
+            execute.execute(result)     
             #print("Se reconocio la cadena de entrada + " + str(result))
-        except:
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Empty Area.")
-            self.msgBox.exec()
+        #except:
+            #self.msgBox = QtWidgets.QMessageBox()
+            #self.msgBox.setText("Empty Area.")
+            #self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
         try:

@@ -6,14 +6,14 @@ class TypeData(Enum):
     CHAR = 3
     STRING = 4
 
-class Symbol():
+class Symbol() :
     'this class represent a symbol in our symbol table'
-    def __init__(self, id, tipo, valor):
+    def __init__(self, id, tipo, valor) :
         self.id = id
         self.tipo = tipo
         self.valor = valor
 
-class SymbolTable():
+class SymbolTable() :
     'this class represent our symbol table'
     def __init__(self, symbols = {}):
         self.symbols = symbols
@@ -25,6 +25,11 @@ class SymbolTable():
         if not id in self.symbols:
             print("Error: variable "+ id + " not defiened." )
         return self.symbols[id]
+
+    def exist(self, id):
+        if id in self.symbols:
+            return 1
+        return 0
     
     def update(self, symbol):
         if not symbol.id in self.symbols:

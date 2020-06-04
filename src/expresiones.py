@@ -64,16 +64,11 @@ class String_(StringExpression):
     def __init__(self, string):
         self.string = string
 
-class StringAritmetic(StringExpression):
-    def __init__(self, expression):
-        self.expression = expression
-
-
 ######---------------- Logical Section
 class LogicalExpression:
     '''this class represent an logical expresions'''
 
-class RelationAndRelational(LogicalExpression):
+class LogicAndRelational(LogicalExpression):
     def __init__(self, op1, op2, operator):
         self.op1 = op1
         self.op2 = op2
