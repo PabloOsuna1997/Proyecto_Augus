@@ -6,9 +6,9 @@ main:
     $t2 = 10*6;
     print($t1);
     print($t2);
-    $t1 = 10*5;
+    $t1 = -$t2;
     print($t1);
-    $t3 = 'prueba string';
+    $t3 = "prueba string";
     print($t3);
     if('hola') goto etiqueta1;
     unset($t0);
@@ -17,7 +17,7 @@ main:
     $t1 = 5;
     $t2[4] = 6 < 7;
     $t2[4] = 6 << 7;
-    $t2[4] = 'hola';
+    $t2[4] = "hola";
     $t2[4] = $t3;
     $t2[4] = (int)$t3;
     $t3 = $t3[6+7];

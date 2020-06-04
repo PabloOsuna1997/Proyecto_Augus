@@ -6,17 +6,20 @@ from instrucciones import *
 def execute(input):
     #print(input)
     tsGlobal = TS.SymbolTable()
-    process(input,tsGlobal)
+    printList = []
+    process(input,tsGlobal, printList)
+    return printList
 
-def process(instructions, ts):
+def process(instructions, ts, printList):
     for i in instructions:
         #isinstance verificar tipos
-        if isinstance(i, Print_): Print(i,ts)
+        if isinstance(i, Print_): Print(i,ts, printList)
         elif isinstance(i, Declaration): Declaration_(i, ts)
 
 #---instructions 
-def Print(instruction, ts):
-    print("> ", valueString(instruction.cadena, ts))
+def Print(instruction, ts, printList):
+    #print("> ", valueString(instruction.cadena, ts)) 
+    printList.append(valueString(instruction.cadena, ts))
 
 def Declaration_(instruction, ts):
     

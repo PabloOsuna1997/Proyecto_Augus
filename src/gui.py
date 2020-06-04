@@ -184,7 +184,11 @@ class Ui_Augus(object):
             result = grammar.parse(content)
             #print(result)
             #run execute
-            execute.execute(result)     
+            printList = execute.execute(result)     
+
+            print("Console:")
+            for element in printList:
+                print( "> " + element)
             #print("Se reconocio la cadena de entrada + " + str(result))
         #except:
             #self.msgBox = QtWidgets.QMessageBox()
