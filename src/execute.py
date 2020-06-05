@@ -12,12 +12,6 @@ def execute(input):
     f.write("n000 -- n001;\n")
     f.write("n001 [label=\"Instrucciones\"] ;\n")
 
-    f.write("n001 -- n002;\n")
-    f.write("n002 [label=\"Print\"] ;\n")
-
-    f.write("n001 -- n003;\n")
-    f.write("n003 [label=\"Declaracion\"] ;\n")
-
     tsGlobal = TS.SymbolTable()
     printList = []
     process(input,tsGlobal, printList,f)
@@ -28,8 +22,12 @@ def process(instructions, ts, printList,f):
     for i in instructions:
         #isinstance verificar tipos       
         if isinstance(i, Print_):
+            f.write("n001 -- n002;\n")
+            f.write("n002 [label=\"Print\"] ;\n")
             Print(i,ts, printList,f)
         elif isinstance(i, Declaration):
+            f.write("n001 -- n003;\n")
+            f.write("n003 [label=\"Declaracion\"] ;\n")
             Declaration_(i, ts,f)
 
 #---instructions 
@@ -44,6 +42,8 @@ def Print(instruction, ts, printList,f):
 def Declaration_(instruction, ts,f):    
     val = valueExpression(instruction.val, ts)
     type_ = getType(val)
+    #print("valor: "+str(val))
+    #print("tipo: "+ str(type_))
     sym = TS.Symbol(instruction.id, type_, val)
 
     if ts.exist(instruction.id) != 1:
@@ -100,10 +100,17 @@ def valueExpression(instruction, ts):
 
     elif isinstance(instruction, Cast_):
         num1 = valueExpression(instruction.expression,ts)
-        if isinstance(num1, 'int'):
+        #print("este es el valor: "+ str(num1))
+        if isinstance(num1, int):
             if(instruction.type == 'float'):
                 # convert float to int 
-                print("ksjdnd")
+                return float(num1)
+        elif isinstance(num1, float):
+            print("tipo float")
+            if(instruction.type == 'int'):
+                # convert float to int 
+                print(num1)
+                return int(num1)
 
     elif isinstance(instruction, String_):
         return instruction.string

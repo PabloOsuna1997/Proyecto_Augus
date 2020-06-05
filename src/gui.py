@@ -176,6 +176,10 @@ class Ui_Augus(object):
 
     def fn_Ejecutar_Ascendente(self):
         #try:
+            fgraph = open('./ast.dot','w') #creamos el archivo
+            fgraph.write("graph \"\"{")
+            fgraph.close()
+
             fgraph = open('./graph.dot','w') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
@@ -196,6 +200,10 @@ class Ui_Augus(object):
             f.close()
 
             #creat to report
+            fgraph = open('./ast.dot','a') #creamos el archivo
+            fgraph.write("}")
+            fgraph.close()
+
             fgraph = open('./graph.dot','a') #creamos el archivo
             fgraph.write("}")
             fgraph.close()
@@ -203,6 +211,8 @@ class Ui_Augus(object):
             import os
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng graph.dot -o graph.png')
+            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+            os.system('dot -Tpng ast.dot -o ast.png')
 
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Correct Analysis.")
