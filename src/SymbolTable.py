@@ -5,13 +5,19 @@ class TypeData(Enum):
     FLOAT = 2
     CHAR = 3
     STRING = 4
+    ARRAY = 5
+    FUNCION = 6
+    PROCEDIMIENTO = 7
 
 class Symbol() :
     'this class represent a symbol in our symbol table'
-    def __init__(self, id, tipo, valor) :
+    def __init__(self, id, tipo, valor, dimension = 0, declarada = 'main', referencia = 0) :
         self.id = id
         self.tipo = tipo
         self.valor = valor
+        self.dimension = dimension
+        self.declarada = declarada
+        self.referencia = referencia
 
 class SymbolTable() :
     'this class represent our symbol table'

@@ -7,8 +7,10 @@ main:
     print($t1);
     print($t2);
     $t1 = -$t2;
+    $t1 = abs($t1);
+    print("aplicando abs a t1");
     print($t1);
-    $t3 = "prueba string";
+    $t3 = "prueba declaracion string";
     print($t3);
     if('hola') goto etiqueta1;
     unset($t0);
@@ -20,7 +22,7 @@ main:
     $t2[4] = "hola";
     $t2[4] = $t3;
     $t2[4] = (int)$t3;
-    $t3 = $t3[6+7];
+    $t3 = $t3[67];
 
 etiqueta1:
 

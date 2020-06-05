@@ -99,17 +99,10 @@ class RelationalBit(BitBit):
 class Cast:
     'this class represent the diferents types of the cast'
 
-class toInt(Cast):
-    def __init__(self, expression):
+class Cast_(Cast):
+    def __init__(self, expression, type):
         self.expression = expression
-
-class toFloat(Cast):
-    def __init__(self, expression):
-        self.expression = expression
-
-class toChar(Cast):
-    def __init__(self, expression):
-        self.expression = expression
+        self.type = type
 
 
 ###------------------------read setcion

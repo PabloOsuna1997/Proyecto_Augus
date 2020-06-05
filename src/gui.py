@@ -6,8 +6,8 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-import gramatica as grammar
-import ejecucion as execute
+import grammar
+import execute
 import sys 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
@@ -176,20 +176,37 @@ class Ui_Augus(object):
 
     def fn_Ejecutar_Ascendente(self):
         #try:
-            #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-            #print("contenido a ejecutar de manera ascendente: " + content)
+            fgraph = open('./graph.dot','w') #creamos el archivo
+            fgraph.write("graph \"\" {")
+            fgraph.close()
+
+            #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
 
             f = open("../entrada.txt", "r")
-            content = f.read()
-            result = grammar.parse(content)
-            #print(result)
+            content = f.read()            
             #run execute
+            result = grammar.parse(content)
             printList = execute.execute(result)     
 
             print("Console:")
-            for element in printList:
+            self.textEditConsole.setText("")
+            for element in printList:                
+                self.textEditConsole.append("> " + element + "\n")
                 print( "> " + element)
-            #print("Se reconocio la cadena de entrada + " + str(result))
+            f.close()
+
+            #creat to report
+            fgraph = open('./graph.dot','a') #creamos el archivo
+            fgraph.write("}")
+            fgraph.close()
+
+            import os
+            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+            os.system('dot -Tpng graph.dot -o graph.png')
+
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Correct Analysis.")
+            self.msgBox.exec()
         #except:
             #self.msgBox = QtWidgets.QMessageBox()
             #self.msgBox.setText("Empty Area.")

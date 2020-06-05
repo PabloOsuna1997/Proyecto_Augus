@@ -147,8 +147,8 @@ lexer = lex.lex()
 #sintactic
 
 #construction the ast
-from expresiones import *
-from instrucciones import *
+from expressions import *
+from instructions import *
 
 #definition of grammar 
 
@@ -157,9 +157,11 @@ def p_init(t):
     #code (sintetize result the A to S)
     t[0] = t[1]
     #print("result the t[0]: " + str(t[0]))
+    print("s")
 
 def p_main(t):
     'A : MAIN DOSPUNTOS SENTENCIAS'
+    print("main")
 
     #solo agrego las sentencias 
     t[0] = t[3]
@@ -206,10 +208,23 @@ def p_declaraciones(t):
     t[0] = Declaration(t[1], t[2])
 
 def p_array(t):
-    '''ARRAY_    : CORIZQ EXPRESION CORDER IGUAL EXPRESION PUNTOCOMA
+    '''ARRAY_    :  CORCHETES IGUAL EXPRESION PUNTOCOMA
                 | IGUAL EXPRESION PUNTOCOMA'''
 
     if(t[1] == '='): t[0] = t[2]  #if expresion is array, expression contain 'array'
+
+def p_corchete_lista(t):
+    'CORCHETES : CORCHETES CORCHETE'
+    t[1].append(t[2])
+    t[0] = t[1]
+    
+def p_corchetes_corchete(t):
+    'CORCHETES : CORCHETE'
+    t[0] = [t[1]]
+
+def p_corchete(t):
+    'CORCHETE : CORIZQ F CORDER'
+    t[0] = t[2]
 
 def p_expresion(t):
     '''EXPRESION    :  ATOMICO
@@ -222,7 +237,8 @@ def p_operacion(t):
                     | MENOS F
                     | NOTLOGICA F
                     | NOTBIT F
-                    | ID CORIZQ EXPRESION CORDER '''
+                    | ANDBIT F
+                    | ID CORCHETES '''
 
     #code
     #aritmetics
@@ -252,7 +268,7 @@ def p_operacion(t):
     elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI)
     elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD)
     
-    else: t[0] = IdentifierArray(t[1],t[3])
+    else: t[0] = IdentifierArray(t[1],t[2])
 
 
 def p_numero(t):
@@ -265,13 +281,10 @@ def p_funcion(t):
                     | READ PARIZQ PARDER
                     | ARRAY PARIZQ PARDER'''
 
-    if(t[1] == 'abs'): t[0] = Abs(t[3])
-    elif(t[1] == 'read'): t[0] = ReadConsole()
-    elif(t[1] == '('):
-        if(t[2] == 'int'): t[0] = toInt(t[4])
-        elif(t[2] == 'float'): t[0] = toFloat(t[4])
-        elif(t[2] == 'char'): t[0] = toChar(t[4])
-    elif(t[1] == 'array'): t[0] = t[1]  #devolvemos la palabra array
+    if(t[1] == 'abs'):      t[0] = Abs(t[3])
+    elif(t[1] == 'read'):   t[0] = ReadConsole()
+    elif(t[1] == '('):      t[0] = Cast_(t[4],t[2])
+    elif(t[1] == 'array'):  t[0] = t[1]  #devolvemos la palabra array
 
 
 def p_operador(t):
