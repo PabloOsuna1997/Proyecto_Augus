@@ -106,7 +106,6 @@ def valueExpression(instruction, ts):
                 # convert float to int 
                 return float(num1)
         elif isinstance(num1, float):
-            print("tipo float")
             if(instruction.type == 'int'):
                 # convert float to int 
                 print(num1)

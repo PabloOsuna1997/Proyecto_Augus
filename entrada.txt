@@ -1,6 +1,9 @@
 main:
-    $t0 = abs(10);
-    $t1 = 10.0;
-    $t6 = read();
-    $t6 = array();
-    $t2 = (int)$t1;
+    print('hola como estas');
+    $t1[5]['hola'] = abs(10);
+    $t0 = $t1[0];
+    if(3>2) goto labe;
+    goto laber;
+    exit;
+    unset($t0);
+etiqueta:

@@ -211,6 +211,7 @@ class Ui_Augus(object):
             import os
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng graph.dot -o graph.png')
+            
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng ast.dot -o ast.png')
 
