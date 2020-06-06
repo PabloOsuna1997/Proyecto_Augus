@@ -175,7 +175,13 @@ conNode = 1
 senteList = [] #para guardar las sentencias y despues apuntarlas
 senteList_ = []
 corcheList = []
+bandera = 0
+corcheListaux = []
+corcheListaux = []
+csList = []
 sentenciaHija = 0
+bandera = 0
+res = []
 
 fgraph = open('./ast.dot','a') #creamos el archivo
 fgraph.write("\n") 
@@ -448,7 +454,7 @@ def p_array(t):
     '''ARRAY_    :  CORCHETES IGUAL EXPRESION PUNTOCOMA
                 | IGUAL EXPRESION PUNTOCOMA'''
 
-    global contador, conNode, fgraph, senteList, corcheList
+    global contador, conNode, fgraph, senteList, corcheList,res, bandera, corcheListaux
     if t[1] == '=':
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"=\"] ;\n")
@@ -463,9 +469,16 @@ def p_array(t):
     else:
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETES\"] ;\n")
-        for i in corcheList:
-            fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-        corcheList[:] = []
+        #print("hijos de corchete: "+ str(res))
+        if bandera == 1:
+            for i in corcheListaux:
+                fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
+            corcheListaux[:] = []
+        else:
+            for i in corcheList:
+                fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
+            corcheList[:] = []
+
         fgraph.write("n00"+str(conNode+2)+" [label=\"=\"] ;\n")
         fgraph.write("n00"+str(conNode+3)+" [label=\"EXPRESION\"] ;\n")
         fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(conNode)+";\n")
@@ -484,18 +497,26 @@ def p_corchete_lista(t):
     t[1].append(t[2])
     t[0] = t[1]
 
-    global contador, conNode, fgraph, corcheList
+    global contador, conNode, fgraph, corcheList, res
 
-    fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETES\"] ;\n")    
+    fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETES\"] ;\n")
+    contador = 0    
     for i in corcheList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
+        if contador < 2:
+            contador += 1
+            fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
     corcheList[:] = []
+
     fgraph.write("n00"+str(conNode+2)+" [label=\"CORCHETE\"] ;\n")
     for i in senteList:
         fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
     senteList[:] = []
     corcheList.append(conNode+1)
     corcheList.append(conNode+2)
+
+    #print("guardo hijos:" + str(corcheList))
+    res = corcheList[:]
+    #print("confirmo: " + str(res))
     conNode += 3
 
     
@@ -503,9 +524,16 @@ def p_corchetes_corchete(t):
     'CORCHETES : CORCHETE'
     t[0] = [t[1]]
 
-    global contador, conNode, fgraph,corcheList
+    global contador, conNode, fgraph,corcheList, bandera,corcheListaux 
+   
+    if len(corcheList) != 0:
+        bandera = 1
+        corcheListaux = corcheList[:]
+    else:
+        bandera = 0
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETE\"] ;\n")
+    print(senteList)
     for i in senteList:
         fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
     senteList[:] = []
@@ -517,7 +545,7 @@ def p_corchete(t):
     'CORCHETE : CORIZQ F CORDER'
     t[0] = t[2]
 
-    global contador, conNode, fgraph, senteList
+    global contador, conNode, fgraph, senteList,csList
 
     fgraph.write("n00"+str(conNode+1)+";\n")   #f
     fgraph.write("n00"+str(conNode+1)+" [label=\"[\"] ;\n")
@@ -527,6 +555,7 @@ def p_corchete(t):
     senteList.append(conNode+1)
     senteList.append(conNode+2)
     senteList.append(conNode+3)
+    csList[:] = []
     conNode += 3
 
 
@@ -577,17 +606,16 @@ def p_operacion(t):
 
     #code
     #aritmetics
-    global contador, conNode, fgraph
+    global contador, conNode, fgraph,senteList,corcheList
     if len(t) == 4:
 
-        fgraph.write("n00"+str(conNode+1)+";\n")   #f
         fgraph.write("n00"+str(conNode+1)+" [label=\"F\"] ;\n")
-        #fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(conNode-1)+";\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #operador
+        
         fgraph.write("n00"+str(conNode+2)+" [label=\""+t[2]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+";\n")   #f
         fgraph.write("n00"+str(conNode+3)+" [label=\"F\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(conNode)+";\n")
+        for i in csList:
+            fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(i)+";\n")
+        csList[:] = []
         senteList.append(conNode+1)
         senteList.append(conNode+2)
         senteList.append(conNode+3)
@@ -686,10 +714,12 @@ def p_numero(t):
     global contador
 
     
-    global fgraph, conNode
+    global fgraph, conNode,csList
     fgraph.write("n00"+str(conNode+1)+";\n")   #node
     fgraph.write("n00"+str(conNode+1)+" [label=\"F\"] ;\n")
-    fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(conNode)+";\n")
+    for i in csList:
+        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
+    csList[:] = []
     conNode += 1
 
 def p_funcion(t):
@@ -788,8 +818,10 @@ def p_operador(t):
     t[0] = t[1]
     
     global contador, conNode, fgraph
+    conNode += 1
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
+    conNode += 1
 
 
 def p_tipo(t):
@@ -808,25 +840,42 @@ def p_f_numero(t):
     'F  : NUMERO'
     t[0] = Number(t[1])
     
-    global contador, conNode, fgraph
+    global contador, conNode, fgraph,csList
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
+    csList.append(conNode)
 
 def p_f_id(t):
     'F  : ID'
     t[0] = Identifier(t[1])
 
-    global contador, conNode, fgraph
+    global contador, conNode, fgraph,corcheList
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
+    csList.append(conNode)
+
+def p_f_idARRAY(t):
+    'F  : ID CORCHETES'
+    t[0] = Identifier(t[1])
+
+    global contador, conNode, fgraph,corcheList
+    fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
+    fgraph.write("n00"+str(conNode+2)+" [label=\"CORCHETES\"] ;\n")
+    
+    for i in corcheList:
+        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
+    corcheList[:] = []
+    csList.append(conNode+1)
+    csList.append(conNode+2)
+    conNode += 2
 
 def p_f_cadena(t):
     'F  : CADENA'
 
-    global contador, conNode, fgraph
+    global contador, conNode, fgraph,corcheList
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-
+    csList.append(conNode)
     t[0] = String_(t[1])
 
 def p_error(t):

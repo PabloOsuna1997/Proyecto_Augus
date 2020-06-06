@@ -177,17 +177,17 @@ class Ui_Augus(object):
     def fn_Ejecutar_Ascendente(self):
         #try:
             fgraph = open('./ast.dot','w') #creamos el archivo
-            fgraph.write("graph \"\"{")
+            fgraph.write("graph \"\"{ node [shape=box];\n")
             fgraph.close()
 
             fgraph = open('./graph.dot','w') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
 
-            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
+            #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
 
-            #f = open("../entrada.txt", "r")
-            #content = f.read()            
+            f = open("../entrada.txt", "r")
+            content = f.read()            
             #run execute
             result = grammar.parse(content)
             printList = execute.execute(result)     
@@ -197,7 +197,7 @@ class Ui_Augus(object):
             for element in printList:                
                 self.textEditConsole.append("> " + str(element) + "\n")
                 print( "> " + str(element))
-            #f.close()
+            f.close()
 
             #creat to report
             fgraph = open('./ast.dot','a') #creamos el archivo
