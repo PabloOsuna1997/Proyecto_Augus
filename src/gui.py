@@ -187,37 +187,46 @@ class Ui_Augus(object):
             #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
 
             f = open("../entrada.txt", "r")
-            content = f.read()            
-            #run execute
-            result = grammar.parse(content)
-            printList = execute.execute(result)     
-
-            print("Console:")
-            self.textEditConsole.setText("")
-            for element in printList:                
-                self.textEditConsole.append("> " + str(element) + "\n")
-                print( "> " + str(element))
+            content = f.read()
+            #analysis
+            result = grammar.parse(content)            
             f.close()
+            
+            if len(result) == 0:
+                print("Errores Lexicos: "+ str(grammar.LexicalErrosList)) 
+                print("Errores Sintacticos: "+ str(grammar.sintacticErroList)) 
+                self.msgBox = QtWidgets.QMessageBox()
+                self.msgBox.setText("this file contains lexical or syntactical errors.")
+                self.msgBox.exec()
+            
+            else:
+                self.msgBox = QtWidgets.QMessageBox()
+                self.msgBox.setText("Correct Analysis.")
+                self.msgBox.exec()
+                #not exist errors
+                printList = execute.execute(result)
+
+                print("Console:")
+                self.textEditConsole.setText("")
+                for element in printList:                
+                    self.textEditConsole.append("> " + str(element) + "\n")
+                    print( "> " + str(element))
 
             #creat to report
-            fgraph = open('./ast.dot','a') #creamos el archivo
+            fgraph = open('./ast.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
             fgraph.close()
 
-            fgraph = open('./graph.dot','a') #creamos el archivo
+            fgraph = open('./graph.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
             fgraph.close()
 
             import os
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng graph.dot -o graph.png')
-
-            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng ast.dot -o ast.png')
 
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Correct Analysis.")
-            self.msgBox.exec()
+            
         #except:
             #self.msgBox = QtWidgets.QMessageBox()
             #self.msgBox.setText("Empty Area.")

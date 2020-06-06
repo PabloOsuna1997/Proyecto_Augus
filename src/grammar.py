@@ -92,9 +92,13 @@ t_MENORIGUAL= r'<='
 t_MAYORQUE  = r'>'
 t_MENORQUE  = r'<'
 
-#import lexicalObject as LO
+from lexicalObject import *
+from sintacticObject import *
+sintacticErroList = []
+sintacticErroList[:] = []
 LexicalErrosList = []
 LexicalErrosList[:] =[ ]
+input_ = ''
 
 def t_NUMERO(t):
     r'\d+(\.\d+)?'
@@ -143,14 +147,18 @@ def t_newline(t):
 
 # method for obtention the column
 def find_column(input, token):
+    #print(input)
     line_start = input.rfind('\n', 0, token.lexpos) + 1
+    #print("inicio: " + str(line_start))
+    #print("columna: " + str(token.lexpos))
     return (token.lexpos - line_start) + 1
     
 def t_error(t):
+    global input_,LexicalErrosList
     print("Illegal character '%s'" % t.value[0])
-    global LexicalErrosList
-    #lo = LO.lexicalObject(t.value[0],find_column(input,t),1)
-    #LexicalErrosList.append(lo)
+    #print(str(t.lexer.lineno))
+    lo = lexOb(t.value[0],find_column(input_,t),t.lexer.lineno)
+    LexicalErrosList.append(lo)
     t.lexer.skip(1)
 
 import ply.lex as lex
@@ -184,6 +192,9 @@ fgraph.write("\n")
 #definition of grammar 
 def p_init(t):
     'S : A'
+    global input_
+    print("linea main: " +str(t.lineno(1)))
+    print("index: " + str(t.lexpos(1)))
     #code (sintetize result the A to S)
     t[0] = t[1]
     global fgraph,senteList, contador, conNode
@@ -402,13 +413,11 @@ def p_instrucciones(t):
         conNode += 4
 
 def p_declaraciones(t):
-    'DECLARACIONES  : ID ARRAY_'
-    
+    'DECLARACIONES  : ID ARRAY_'   
     #insertion a new variable
     t[0] = Declaration(t[1], t[2])
 
     global contador, conNode, fgraph, senteList, corcheList
-
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
     fgraph.write("n00"+str(conNode+2)+" [label=\"ARRAY_\"] ;\n")    
     for i in senteList:
@@ -498,7 +507,7 @@ def p_corchetes_corchete(t):
         bandera = 0
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETE\"] ;\n")
-    print(senteList)
+    #print(senteList)
     for i in senteList:
         fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
     senteList[:] = []
@@ -835,12 +844,21 @@ def p_f_cadena(t):
 
 def p_error(t):
     print("Error sintactico en '%s'" % t.value)
+
+    global sintacticErroList
+    so = sinOb(t.value, t.lineno, t.lexpos)
+    sintacticErroList.append(so)
    
 
 import ply.yacc as yacc
 parser = yacc.yacc()
 
-input = ''
 def parse(input):
-    input = input
-    return parser.parse(input)
+    global input_
+    input_ = input
+    #print(input_)
+    instructions = parser.parse(input)
+    if len(LexicalErrosList) > 0:
+        instructions[:] = []
+        return instructions
+    return instructions

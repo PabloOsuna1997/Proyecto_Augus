@@ -1,7 +1,7 @@
-class lexicalObject:
-    ''' this class represent an object lexical'''
+class sintacticObject:
+    ''' this class represent an object sintactic'''
 
-class lexOb(lexicalObject):
+class sinOb(sintacticObject):
         def __init__(self, lexema, column, line):
             self.lexema = lexema
             self.column = column
