@@ -184,10 +184,10 @@ class Ui_Augus(object):
             fgraph.write("graph \"\" {")
             fgraph.close()
 
-            #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
 
-            f = open("../entrada.txt", "r")
-            content = f.read()            
+            #f = open("../entrada.txt", "r")
+            #content = f.read()            
             #run execute
             result = grammar.parse(content)
             printList = execute.execute(result)     
@@ -195,9 +195,9 @@ class Ui_Augus(object):
             print("Console:")
             self.textEditConsole.setText("")
             for element in printList:                
-                self.textEditConsole.append("> " + element + "\n")
-                print( "> " + element)
-            f.close()
+                self.textEditConsole.append("> " + str(element) + "\n")
+                print( "> " + str(element))
+            #f.close()
 
             #creat to report
             fgraph = open('./ast.dot','a') #creamos el archivo
@@ -211,7 +211,7 @@ class Ui_Augus(object):
             import os
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng graph.dot -o graph.png')
-            
+
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             os.system('dot -Tpng ast.dot -o ast.png')
 

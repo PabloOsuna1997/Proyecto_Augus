@@ -35,7 +35,7 @@ def Print(instruction, ts, printList,f):
     #add to .dot
     global contador
     f.write("n002 -- n00"+str(contador)+";\n")
-    f.write("n00"+str(contador)+" [label=\""+valueString(instruction.cadena, ts)+"\"] ;\n")
+    f.write("n00"+str(contador)+" [label=\""+ str(valueString(instruction.cadena, ts))+"\"] ;\n")
     contador += 1
     printList.append(valueString(instruction.cadena, ts))
 
@@ -79,8 +79,8 @@ def valueExpression(instruction, ts):
             #if isinstance(num2, str):
                 #print("Error: types.")
 
-        if instruction.operator == Aritmetics.MAS: return num1 + num2
-        elif instruction.operator == Aritmetics.MENOS: return num1 - num2
+        #if instruction.operator == Aritmetics.MAS: return num1 + num2
+        if instruction.operator == Aritmetics.MENOS: return num1 - num2
         elif instruction.operator == Aritmetics.POR: return num1 * num2
         elif instruction.operator == Aritmetics.DIV: return num1 / num2
         elif instruction.operator == Aritmetics.MODULO: return num1 % num2

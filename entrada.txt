@@ -1,9 +1,4 @@
 main:
-    print('hola como estas');
-    $t1[5]['hola'] = abs(10);
-    $t0 = $t1[0];
-    if(3>2) goto labe;
-    goto laber;
-    exit;
-    unset($t0);
-etiqueta:
+    $t1 = 0;
+    $t3 = 0;
+    $t2[5][2][3] = $t1 + $t3[2];

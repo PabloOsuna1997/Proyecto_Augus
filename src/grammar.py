@@ -92,6 +92,9 @@ t_MENORIGUAL= r'<='
 t_MAYORQUE  = r'>'
 t_MENORQUE  = r'<'
 
+#import lexicalObject as LO
+LexicalErrosList = []
+LexicalErrosList[:] =[ ]
 
 def t_NUMERO(t):
     r'\d+(\.\d+)?'
@@ -138,9 +141,18 @@ t_ignore = " \t"
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
+
+
+# method for obtention the column
+def find_column(input, token):
+    line_start = input.rfind('\n', 0, token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
     
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
+    global LexicalErrosList
+    #lo = LO.lexicalObject(t.value[0],find_column(input,t),1)
+    LexicalErrosList.append(lo)
     t.lexer.skip(1)
 
 
@@ -169,21 +181,15 @@ fgraph = open('./ast.dot','a') #creamos el archivo
 fgraph.write("\n") 
 
 #definition of grammar 
-
 def p_init(t):
     'S : A'
     #code (sintetize result the A to S)
     t[0] = t[1]
+    #global input
     #print("result the t[0]: " + str(t[0]))
     #print(treeList)
     #print(len(treeList))
     global fgraph,senteList, contador, conNode
-    node = node_("A",t[1],contador)
-    contador += 1
-    treeList.append(node)
-    node = node_("S",t[0],contador)
-    contador += 1;
-    treeList.append(node)
     
     fgraph.write("n00"+str(conNode+1)+" [label=\"A\"] ;\n")
     for i in senteList:
@@ -217,14 +223,7 @@ def p_main(t):
     #solo agrego las sentencias 
     t[0] = t[3]
 
-    global contador, conNode, fgraph, treeList
-    node = node_("MAIN",t[1],contador)
-    node1 = node_(":",t[2],contador)
-    node2 = node_("SENTENCIAS",t[3],contador)
-    contador += 1;
-    treeList.append(node)
-    treeList.append(node1)
-    treeList.append(node2)
+    global contador, conNode, fgraph
     
     fgraph.write("n00"+str(conNode+1)+" [label=\"MAIN\"] ;\n")
     fgraph.write("n00"+str(conNode+2)+" [label=\":\"] ;\n")
@@ -247,12 +246,6 @@ def p_sentencias_lista(t):
 
     global contador, conNode, fgraph, sentenciaHija, senteList_
     global contadorSente
-    node = node_("SENTENCIAS",t[1],contador,contadorSente)
-    node1 = node_("SENTENCIA",t[2],contador,contadorSente)
-    contador += 1;
-    contadorSente += 1
-    treeList.append(node)
-    treeList.append(node1)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"SENTENCIAS\"] ;\n")
     for i in senteList_:
@@ -270,10 +263,6 @@ def p_sentecias_sentencia(t):
 
     global contador, conNode, fgraph, sentenciaHija, primeravez
     global contadorSente
-    node = node_("SENTENCIA",t[1],contador,contadorSente)
-    contador += 1;
-    contadorSente += 1
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"SENTENCIA\"] ;\n")
     if primeravez == 0:
@@ -291,9 +280,6 @@ def p_sentencia_eti(t):
     t[0] = t[1]
 
     global contador, conNode, senteList
-    node = node_("ETIQUETA",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"ETIQUETA\"] ;\n")
     #print(senteList)
@@ -309,16 +295,11 @@ def p_sentencia_instr(t):
     t[0] = t[1]
 
     global contador, conNode, fgraph, senteList, treeList 
-    node = node_("INSTRUCCIONES",t[1],contador)
-    contador += 1
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"INSTRUCCIONES\"] ;\n")
-    #print(senteList)
     for i in senteList:
         fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
     senteList[:] = []
-    #print(senteList)
     conNode +=2
 
 def p_sentencia_decla(t):
@@ -327,9 +308,6 @@ def p_sentencia_decla(t):
     t[0] = t[1]
 
     global contador, conNode, fgraph, senteList
-    node = node_("DECLARACIONES",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"DECLARACIONES\"] ;\n")
     for i in senteList:
@@ -344,11 +322,6 @@ def p_etiqueta(t):
     t[0] = t[1]
     
     global contador,conNode, senteList
-    node = node_("LABEL",t[1],contador)
-    node1 = node_(":",t[2],contador)
-    contador += 1;
-    treeList.append(node)
-    treeList.append(node1)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[0]+"\"] ;\n")
     fgraph.write("n00"+str(conNode+2)+" [label=\":\"] ;\n")        
@@ -366,18 +339,6 @@ def p_instrucciones(t):
     global contador, conNode, fgraph, senteList
     if(t[1] == 'print'): 
         t[0] = Print_(t[3])
-        
-        node = node_("print",t[1],contador)
-        node1 = node_("(",t[2],contador)
-        node2 = node_(" EXPRESION",t[3],contador)
-        node3 = node_(")",t[4],contador)
-        node4 = node_(";",t[5],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-        treeList.append(node3)
-        treeList.append(node4)
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"print\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -398,22 +359,6 @@ def p_instrucciones(t):
 
     elif(t[1] == 'if'): 
         t[0] = If(t[3])
-
-        node = node_("if",t[1],contador)
-        node1 = node_("(",t[2],contador)
-        node2 = node_(" EXPRESION",t[3],contador)
-        node3 = node_(")",t[4],contador)
-        node4 = node_("goto",t[5],contador)
-        node5 = node_("LABEL",t[6],contador)
-        node6 = node_(";",t[7],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-        treeList.append(node3)
-        treeList.append(node4)
-        treeList.append(node5)
-        treeList.append(node6)
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"if\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -437,18 +382,6 @@ def p_instrucciones(t):
     elif(t[1] == 'unset'): 
         t[0] = Unset(t[3])
 
-        node = node_("unset",t[1],contador)
-        node1 = node_("(",t[2],contador)
-        node2 = node_(" ID",t[3],contador)
-        node3 = node_(")",t[4],contador)
-        node4 = node_(";",t[5],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-        treeList.append(node3)
-        treeList.append(node4)
-
         fgraph.write("n00"+str(conNode+1)+" [label=\"unset\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
         fgraph.write("n00"+str(conNode+3)+" [label=\""+t[3]+"\"] ;\n")
@@ -466,14 +399,6 @@ def p_instrucciones(t):
     elif(t[1] == 'goto'): 
         t[0] = Unset(t[2])
 
-        node = node_("goto",t[1],contador)
-        node1 = node_("LABEL",t[2],contador)
-        node2 = node_(" ;",t[3],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-
         fgraph.write("n00"+str(conNode+1)+" [label=\"goto\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\""+t[2]+"\"] ;\n")
         fgraph.write("n00"+str(conNode+3)+" [label=\";\"] ;\n")
@@ -485,12 +410,6 @@ def p_instrucciones(t):
 
     elif(t[1] == 'exit'): 
         t[0] = Exit();
-
-        node = node_("exit",t[1],contador)
-        node1 = node_(";",t[2],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"exit\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -511,11 +430,6 @@ def p_declaraciones(t):
     t[0] = Declaration(t[1], t[2])
 
     global contador, conNode, fgraph, senteList, corcheList
-    node = node_("ID",t[1],contador)
-    node1 = node_("ARRAY_",t[2],contador)
-    contador += 1;
-    treeList.append(node)
-    treeList.append(node1)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
     fgraph.write("n00"+str(conNode+2)+" [label=\"ARRAY_\"] ;\n")    
@@ -536,13 +450,6 @@ def p_array(t):
 
     global contador, conNode, fgraph, senteList, corcheList
     if t[1] == '=':
-        node = node_("IGUAL",t[1],contador)
-        node1 = node_("EXPRESION",t[2],contador)
-        node2 = node_("PUNTOCOMA",t[3],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"=\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"EXPRESION\"] ;\n")
@@ -554,15 +461,6 @@ def p_array(t):
         conNode += 4
     
     else:
-        node = node_("CORCHETES",t[1],contador)
-        node1 = node_("=",t[2],contador)
-        node2 = node_("EXPRESION",t[3],contador)
-        node3 = node_(";",t[4],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-        treeList.append(node3)
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETES\"] ;\n")
         for i in corcheList:
@@ -587,11 +485,6 @@ def p_corchete_lista(t):
     t[0] = t[1]
 
     global contador, conNode, fgraph, corcheList
-    node = node_("CORCHETES",t[1],contador)
-    node1 = node_("CORCHETE",t[2],contador)
-    contador += 1;
-    treeList.append(node)
-    treeList.append(node1)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETES\"] ;\n")    
     for i in corcheList:
@@ -611,9 +504,6 @@ def p_corchetes_corchete(t):
     t[0] = [t[1]]
 
     global contador, conNode, fgraph,corcheList
-    node = node_("CORCHETE",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETE\"] ;\n")
     for i in senteList:
@@ -628,13 +518,6 @@ def p_corchete(t):
     t[0] = t[2]
 
     global contador, conNode, fgraph, senteList
-    node = node_("[",t[1],contador)
-    node1 = node_("F",t[2],contador)
-    node2 = node_("]",t[2],contador)
-    contador += 1;
-    treeList.append(node)
-    treeList.append(node1)
-    treeList.append(node2)
 
     fgraph.write("n00"+str(conNode+1)+";\n")   #f
     fgraph.write("n00"+str(conNode+1)+" [label=\"[\"] ;\n")
@@ -651,9 +534,6 @@ def p_expresion_ato(t):
     'EXPRESION    :  ATOMICO'
     t[0] = t[1]
     global contador, conNode, fgraph
-    node = node_("ATOMICO",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+";\n")   #f
     fgraph.write("n00"+str(conNode+1)+" [label=\"ATOMICO\"] ;\n")
@@ -664,9 +544,6 @@ def p_expresion_fun(t):
     'EXPRESION    :  FUNCION'
     t[0] = t[1]
     global contador, conNode, fgraph
-    node = node_("FUNCION",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+";\n")   #f
     fgraph.write("n00"+str(conNode+1)+" [label=\"FUNCION\"] ;\n")
@@ -680,9 +557,6 @@ def p_expresion_ope(t):
     t[0] = t[1]
 
     global contador, conNode, fgraph,senteList
-    node = node_("OPERACION",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
     fgraph.write("n00"+str(conNode+1)+";\n")   #f
     fgraph.write("n00"+str(conNode+1)+" [label=\"OPERACION\"] ;\n")
@@ -705,13 +579,6 @@ def p_operacion(t):
     #aritmetics
     global contador, conNode, fgraph
     if len(t) == 4:
-        node = node_("F",t[1],contador)
-        node1 = node_("OPERADOR",t[2],contador)
-        node2 = node_("F",t[3],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #f
         fgraph.write("n00"+str(conNode+1)+" [label=\"F\"] ;\n")
@@ -734,11 +601,6 @@ def p_operacion(t):
     #unitaries
     elif(t[1] == '-'): 
         t[0] = NegativeNumber(t[2])
-        node = node_("-",t[1],contador)
-        node1 = node_("F",t[2],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #-
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -751,11 +613,6 @@ def p_operacion(t):
 
     elif(t[1] == '!'): 
         t[0] = Not(t[2])
-        node = node_("-",t[1],contador)
-        node1 = node_("F",t[2],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #!
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -768,11 +625,6 @@ def p_operacion(t):
 
     elif(t[1] == '~'): 
         t[0] = NotBit(t[2])
-        node = node_("-",t[1],contador)
-        node1 = node_("F",t[2],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #~
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -796,11 +648,6 @@ def p_operacion(t):
     #bit to bit
     elif(t[2] == '&'): 
         t[0] = RelationalBit(t[1],t[3], BitToBit.ANDBIT)
-        node = node_("-",t[1],contador)
-        node1 = node_("F",t[2],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #&
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -837,9 +684,6 @@ def p_numero(t):
     t[0] = t[1]
 
     global contador
-    node = node_("F",t[1],contador)
-    #contador += 1;
-    treeList.append(node)
 
     
     global fgraph, conNode
@@ -857,15 +701,6 @@ def p_funcion(t):
     global contador, conNode, fgraph
     if(t[1] == 'abs'):      
         t[0] = Abs(t[3])
-        node = node_("abs",t[1],contador)
-        node1 = node_("(",t[2],contador)
-        node2 = node_("EXPRESION",t[3],contador)
-        node3 = node_(")",t[4],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-        treeList.append(node3)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #abs
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
@@ -885,13 +720,6 @@ def p_funcion(t):
 
     elif(t[1] == 'read'):   
         t[0] = ReadConsole()
-        node = node_("read",t[1],contador)
-        node1 = node_("(",t[2],contador)
-        node2 = node_(")",t[3],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
 
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n") #read
         fgraph.write("n00"+str(conNode+2)+" [label=\""+ str(t[2])+"\"] ;\n") #(
@@ -904,15 +732,6 @@ def p_funcion(t):
     elif(t[1] == '('):        
          
         t[0] = Cast_(Identifier(t[4]),t[2])
-        node = node_("(",t[1],contador)
-        node1 = node_("TIPO",t[2],contador)
-        node2 = node_(")",t[3],contador)
-        node3 = node_("ID",t[4],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
-        treeList.append(node3)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #(
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
@@ -932,13 +751,6 @@ def p_funcion(t):
 
     elif(t[1] == 'array'):  
         t[0] = t[1]  #devolvemos la palabra array
-        node = node_("array",t[1],contador)
-        node1 = node_("(",t[2],contador)
-        node2 = node_(")",t[3],contador)
-        contador += 1;
-        treeList.append(node)
-        treeList.append(node1)
-        treeList.append(node2)
 
         fgraph.write("n00"+str(conNode+1)+";\n")   #array
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
@@ -979,9 +791,6 @@ def p_operador(t):
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
 
-    node = node_("OPERADOR",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
 def p_tipo(t):
     ''' TIPO    : INT
@@ -993,10 +802,7 @@ def p_tipo(t):
     global contador, conNode, fgraph
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    
-    node = node_("TIPO_",t[1],contador)
-    contador += 1;
-    treeList.append(node)
+   
 
 def p_f_numero(t):
     'F  : NUMERO'
@@ -1006,10 +812,6 @@ def p_f_numero(t):
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
 
-    node = node_("NUMERO",t[1],contador)
-    contador += 1;
-    treeList.append(node)
-
 def p_f_id(t):
     'F  : ID'
     t[0] = Identifier(t[1])
@@ -1017,10 +819,6 @@ def p_f_id(t):
     global contador, conNode, fgraph
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    
-    node = node_("IDENTIFICADOR",t[1],contador)
-    contador += 1;
-    treeList.append(node)
 
 def p_f_cadena(t):
     'F  : CADENA'
@@ -1029,18 +827,17 @@ def p_f_cadena(t):
     fgraph.write("n00"+str(conNode)+";\n")   #node
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
 
-    node = node_("CADENA",t[1],contador)
-    contador += 1;
-    treeList.append(node)
-
     t[0] = String_(t[1])
 
 def p_error(t):
-    print("Error sintáctico en '%s'" % t.value)
+    print("Error sintactico en '%s'" % t.value)
+   
 
 
 import ply.yacc as yacc
 parser = yacc.yacc()
 
+input = ''
 def parse(input):
+    input = input
     return parser.parse(input)
