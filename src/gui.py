@@ -8,15 +8,14 @@
 
 import grammar
 import execute
-import sys 
+import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
 #from PyQt5.QtGui import QColor
 
 contadorVentanas = 0
-
 class Ui_Augus(object):
-    def setupUi(self, Augus):
+    def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
         Augus.resize(898, 616)
         self.centralwidget = QtWidgets.QWidget(Augus)
@@ -115,6 +114,13 @@ class Ui_Augus(object):
         self.actionCerrar.triggered.connect(lambda : self.fn_Cerrar())
         self.actionSalir.triggered.connect(lambda : self.fn_Salir())
 
+
+        self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(51, 252, 255);
+                                            font: 15pt \"console\";''' )
+        self.textEditConsole.setPlainText("CONSOLE:\n")
+
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
         Augus.setWindowTitle(_translate("Augus", "Augus"))
@@ -146,7 +152,11 @@ class Ui_Augus(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.textEdit = QtWidgets.QTextEdit(self.tab)
-        self.textEdit.setGeometry(QtCore.QRect(0,0,440,500))
+        self.textEdit.setGeometry(QtCore.QRect(0,0,460,520))
+        self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(255, 255, 255);
+                                            font: 15pt \"console\";''' )
         self.textEdit.setObjectName("textEdit")
         self.tabWidget.addTab(
             self.tab,"Tab "+ str(contadorVentanas)
@@ -169,7 +179,11 @@ class Ui_Augus(object):
                 self.tab = QtWidgets.QWidget()
                 self.tab.setObjectName("tab")
                 self.textEdit = QtWidgets.QTextEdit(self.tab)
-                self.textEdit.setGeometry(QtCore.QRect(0,0,440,500))
+                self.textEdit.setGeometry(QtCore.QRect(0,0,460,520))
+                self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(255, 255, 255);
+                                            font: 15pt \"console\";''' )
                 self.textEdit.setObjectName("textEdit")
                 self.textEdit.setPlainText(data)
                 #self.textEdit.setTextBackgroundColor( QColor ( "Gray"))
@@ -217,6 +231,7 @@ class Ui_Augus(object):
 
                 print("\nConsole:")
                 self.textEditConsole.setText("")
+                self.textEditConsole.setPlainText("CONSOLE:\n")
                 for element in printList:                
                     self.textEditConsole.append("> " + str(element) + "\n")
                     print( "> " + str(element))

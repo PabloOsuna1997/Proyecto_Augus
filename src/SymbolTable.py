@@ -8,16 +8,18 @@ class TypeData(Enum):
     ARRAY = 5
     FUNCION = 6
     PROCEDIMIENTO = 7
+    CONTROL = 8
 
 class Symbol() :
     'this class represent a symbol in our symbol table'
-    def __init__(self, id, tipo, valor, declarada = 'main', dimension = 0, referencia = 0) :
+    def __init__(self, id, tipo, valor, declarada = 'main', parametros = [], dimension = 0, referencia = 0) :
         self.id = id
         self.tipo = tipo
         self.valor = valor        
         self.declarada = declarada
         self.dimension = dimension
         self.referencia = referencia
+        self.parametros = parametros
 
 class SymbolTable() :
     'this class represent our symbol table'
@@ -42,3 +44,9 @@ class SymbolTable() :
             print("Error: variable "+ symbol.id + " not defiened." )
         else:
             self.symbols[symbol.id] = symbol
+    
+    def updateFunction(self, id, type_):
+        if not id in self.symbols:
+            print("Error: function "+ id + " not defiened." )
+        else:
+            self.symbols[id].tipo = type_

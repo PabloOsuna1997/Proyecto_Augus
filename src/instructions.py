@@ -10,7 +10,7 @@ class Print_(Instruction) :
 class Declaration(Instruction):
     '''variables declarations'''
 
-    def __init__(self, id, val):
+    def __init__(self, id, val = 0):
         self.id = id
         self.val = val
 

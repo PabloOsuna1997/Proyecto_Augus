@@ -115,7 +115,7 @@ def t_NUMERO(t):
 
 def t_ID(t):
     r'\$(t|a|v|ra|sp?)[0-9]*'
-    print(str(t.value))
+    #print(str(t.value))
     t.type = reservadas.get(t.value.lower(),'ID')
     return t
 
