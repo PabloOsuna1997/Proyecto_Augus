@@ -26,12 +26,18 @@ class Exit(Instruction):
 
 class If(Instruction):
     '''if statment, recieve a label for jump'''
-    def __init__(self, label):
+    def __init__(self, expression, label):
         self.label = label
+        self.expression = expression
 
 class Goto(Instruction):
     '''label jump'''
 
+    def __init__(self, label):
+        self.label = label
+
+class Label(Instruction):
+    'destination label '
     def __init__(self, label):
         self.label = label
 

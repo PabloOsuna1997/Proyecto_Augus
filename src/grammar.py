@@ -85,7 +85,7 @@ t_MODULO    = r'%'
 t_AND       = r'&&'
 t_OR        = r'\|\|'
 t_IGUAL     = r'\='
-t_IGUALQUE  = r'=='
+t_IGUALQUE  = r'\=\='
 t_DIFERENTE = r'!='
 t_MAYORIGUAL= r'>='
 t_MENORIGUAL= r'<='
@@ -114,7 +114,8 @@ def t_NUMERO(t):
     return t
 
 def t_ID(t):
-    r'\$(t || a || v )[0-9]+'
+    r'\$(t|a|v|ra|sp?)[0-9]*'
+    print(str(t.value))
     t.type = reservadas.get(t.value.lower(),'ID')
     return t
 
@@ -186,15 +187,11 @@ sentenciaHija = 0
 bandera = 0
 res = []
 
-fgraph = open('./ast.dot','a') #creamos el archivo
-fgraph.write("\n") 
+fgraph = ''
 
 #definition of grammar 
 def p_init(t):
     'S : A'
-    global input_
-    print("linea main: " +str(t.lineno(1)))
-    print("index: " + str(t.lexpos(1)))
     #code (sintetize result the A to S)
     t[0] = t[1]
     global fgraph,senteList, contador, conNode
@@ -208,6 +205,7 @@ def p_init(t):
     fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode+1)+";\n")
     conNode +=3
     
+    fgraph.flush()
     fgraph.close()
 
     ####ejecutar analisis
@@ -316,11 +314,10 @@ def p_sentencia_decla(t):
 def p_etiqueta(t):
     # i call label to recognize the label
     'ETIQUETA   : LABEL DOSPUNTOS' 
-    t[0] = t[1]
+    t[0] = Label(t[1])
     
     global contador,conNode, senteList
-
-    fgraph.write("n00"+str(conNode+1)+" [label=\""+t[0]+"\"] ;\n")
+    fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
     fgraph.write("n00"+str(conNode+2)+" [label=\":\"] ;\n")        
     senteList.append(conNode+1)
     senteList.append(conNode+2)
@@ -352,7 +349,7 @@ def p_instrucciones(t):
         conNode += 5        
 
     elif(t[1] == 'if'): 
-        t[0] = If(t[3])
+        t[0] = If(t[3], t[6])
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"if\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -389,7 +386,7 @@ def p_instrucciones(t):
         conNode += 5
 
     elif(t[1] == 'goto'): 
-        t[0] = Unset(t[2])
+        t[0] = Goto(t[2])
 
         fgraph.write("n00"+str(conNode+1)+" [label=\"goto\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\""+t[2]+"\"] ;\n")
@@ -843,7 +840,7 @@ def p_f_cadena(t):
     t[0] = String_(t[1])
 
 def p_error(t):
-    print("Error sintactico en '%s'" % t.value)
+    print("Error sintactico en '%s'" % t.value + "line: "+ str(t.lineno))
 
     global sintacticErroList
     so = sinOb(t.value, t.lineno, t.lexpos)
@@ -854,8 +851,10 @@ import ply.yacc as yacc
 parser = yacc.yacc()
 
 def parse(input):
-    global input_
+    global input_, fgraph
     input_ = input
+    fgraph = open('../reports/ast.dot','a') #creamos el archivo
+    fgraph.write("\n") 
     #print(input_)
     instructions = parser.parse(input)
     if len(LexicalErrosList) > 0:

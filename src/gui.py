@@ -39,14 +39,19 @@ class Ui_Augus(object):
         self.menuEjecutar.setObjectName("menuEjecutar")
         self.menuOpciones = QtWidgets.QMenu(self.menubar)
         self.menuOpciones.setObjectName("menuOpciones")
+        self.menuReportes = QtWidgets.QMenu(self.menubar)
+        self.menuReportes.setObjectName("menuReportes")
         self.menuAyuda = QtWidgets.QMenu(self.menubar)
         self.menuAyuda.setObjectName("menuAyuda")
         Augus.setMenuBar(self.menubar)
+       
         self.statusbar = QtWidgets.QStatusBar(Augus)
         self.statusbar.setObjectName("statusbar")
         Augus.setStatusBar(self.statusbar)
         self.actionNuevo = QtWidgets.QAction(Augus)
         self.actionNuevo.setObjectName("actionNuevo")
+        self.actionReporteLexico = QtWidgets.QAction(Augus)
+        self.actionReporteLexico.setObjectName("actionReporteLexico")
         self.actionAbrir = QtWidgets.QAction(Augus)
         self.actionAbrir.setObjectName("actionAbrir")
         self.actionGuardar = QtWidgets.QAction(Augus)
@@ -74,6 +79,7 @@ class Ui_Augus(object):
         self.actionAyuda = QtWidgets.QAction(Augus)
         self.actionAyuda.setObjectName("actionAyuda")
         self.menuArchivo.addAction(self.actionNuevo)
+        self.menuReportes.addAction(self.actionReporteLexico)
         self.menuArchivo.addAction(self.actionAbrir)
         self.menuArchivo.addAction(self.actionGuardar)
         self.menuArchivo.addAction(self.actionGuardar_Como)
@@ -91,6 +97,7 @@ class Ui_Augus(object):
         self.menubar.addAction(self.menuEditar.menuAction())
         self.menubar.addAction(self.menuEjecutar.menuAction())
         self.menubar.addAction(self.menuOpciones.menuAction())
+        self.menubar.addAction(self.menuReportes.menuAction())
         self.menubar.addAction(self.menuAyuda.menuAction())
 
         self.retranslateUi(Augus)
@@ -115,8 +122,10 @@ class Ui_Augus(object):
         self.menuEditar.setTitle(_translate("Augus", "Editar"))
         self.menuEjecutar.setTitle(_translate("Augus", "Ejecutar"))
         self.menuOpciones.setTitle(_translate("Augus", "Opciones"))
+        self.menuReportes.setTitle(_translate("Augus", "Reportes"))
         self.menuAyuda.setTitle(_translate("Augus", "Ayuda"))
         self.actionNuevo.setText(_translate("Augus", "Nuevo"))
+        self.actionReporteLexico.setText(_translate("Augus", "Reporte Lexico"))
         self.actionAbrir.setText(_translate("Augus", "Abrir"))
         self.actionGuardar.setText(_translate("Augus", "Guardar"))
         self.actionGuardar_Como.setText(_translate("Augus", "Guardar Como"))
@@ -176,21 +185,24 @@ class Ui_Augus(object):
 
     def fn_Ejecutar_Ascendente(self):
         #try:
-            fgraph = open('./ast.dot','w') #creamos el archivo
-            fgraph.write("graph \"\"{ node [shape=box];\n")
+            fgraph = open('../reports/ast.dot','w+') #creamos el archivo
+            fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
 
-            fgraph = open('./graph.dot','w') #creamos el archivo
+            fgraph = open('../reports/graph.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
 
             #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
 
             f = open("../entrada.txt", "r")
-            content = f.read()
+            content = f.read()            
+            #print(str(content))
             #analysis
-            result = grammar.parse(content)            
+            result = grammar.parse(content)
+            f.flush()           
             f.close()
+            #print(str(content))
             
             if len(result) == 0:
                 print("Errores Lexicos: "+ str(grammar.LexicalErrosList)) 
@@ -200,32 +212,36 @@ class Ui_Augus(object):
                 self.msgBox.exec()
             
             else:
-                self.msgBox = QtWidgets.QMessageBox()
-                self.msgBox.setText("Correct Analysis.")
-                self.msgBox.exec()
                 #not exist errors
                 printList = execute.execute(result)
 
-                print("Console:")
+                print("\nConsole:")
                 self.textEditConsole.setText("")
                 for element in printList:                
                     self.textEditConsole.append("> " + str(element) + "\n")
                     print( "> " + str(element))
+                
+                self.msgBox = QtWidgets.QMessageBox()
+                self.msgBox.setText("Correct Analysis.")
+                self.msgBox.exec()
 
             #creat to report
-            fgraph = open('./ast.dot','a') #agregamos al archivo '}'
+            fgraph = open('../reports/ast.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
+            fgraph.flush() 
             fgraph.close()
 
-            fgraph = open('./graph.dot','a') #agregamos al archivo '}'
+            fgraph = open('../reports/graph.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
+            fgraph.flush()
             fgraph.close()
 
             import os
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-            os.system('dot -Tpng graph.dot -o graph.png')
-            os.system('dot -Tpng ast.dot -o ast.png')
+            os.system('dot -Tpng ../reports/graph.dot -o ../reports/graph.png')
+            os.system('dot -Tpng ../reports/ast.dot -o ../reports/ast.png')
 
+            sys.stdout.flush()
             
         #except:
             #self.msgBox = QtWidgets.QMessageBox()

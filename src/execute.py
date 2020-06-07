@@ -3,10 +3,13 @@ import SymbolTable as TS
 from expressions import *
 from instructions import *
 
-contador = 4
+contador = 4  #for grapho
+beforeInstruction = 0
+currentAmbit = ''
+
 def execute(input):
     #print(input)
-    f = open("./graph.dot","a")
+    f = open("../reports/graph.dot","a")
     f.write("n000 ;\n")
     f.write("n000 [label=\"Inicio\"] ;\n")
     f.write("n000 -- n001;\n")
@@ -19,18 +22,76 @@ def execute(input):
     return printList
 
 def process(instructions, ts, printList,f):
-    for i in instructions:
-        #isinstance verificar tipos       
-        if isinstance(i, Print_):
+    global currentAmbit, pasadas
+    i = 0
+    while i < len(instructions):
+        #isinstance verificar tipos 
+        b = instructions[i]      
+        if isinstance(b, Print_):
             f.write("n001 -- n002;\n")
             f.write("n002 [label=\"Print\"] ;\n")
-            Print(i,ts, printList,f)
-        elif isinstance(i, Declaration):
+            Print(b,ts, printList,f)
+        elif isinstance(b, Declaration):
             f.write("n001 -- n003;\n")
             f.write("n003 [label=\"Declaracion\"] ;\n")
-            Declaration_(i, ts,f)
+            Declaration_(b, ts,f)
+        
+        elif isinstance(b, If):
+            currentAmbit = 'if'
+            result = valueExpression(b.expression, ts)
+            if result >= 1:
+                tmp = i
+                i = goto(i+1, instructions, b.label)
+                if i != 0:
+                    print("realizando salto a: "+ str(b.label))
+                else:
+                    i = tmp
+                    print("error semantico, etiqueta no existe")
+            else:
+                print("false")
+
+        elif isinstance(b, Goto):
+            #seteamos la instruccion anterior como la llamada al goto
+            tmp = i
+            i = goto(i, instructions, b.label)
+            if i != 0:
+                pasadas = 0
+                print("realizando salto a: "+ str(b.label))
+            else:
+                i = tmp
+                print("error semantico, etiqueta no existe")
+        
+        elif isinstance(b, Label):
+            print("actualizando ambiente")
+            currentAmbit = b.label
+        elif isinstance(b, Exit):
+            break
+        i += 1
 
 #---instructions 
+pasadas = 0
+def goto(i, instructions, label):
+    print("instruccion No: "+str(i))
+    print("etiqueta buscada: "+str(label))
+    global pasadas
+    c = i
+    while c < len(instructions):
+        d = instructions[c]
+        #print(str(d))
+        if isinstance(d,Label):
+            if d.label == label:
+                print("lo encontre retornando: "+ str(c-1))
+                return c-1
+        c += 1
+    #semantic error, this label dont exist
+    pasadas += 1
+    print("pasadas: "+str(pasadas))
+    if pasadas == 2:
+        #ya dio 2 pasadas completas
+        return 0
+    i = goto(0, instructions, label)
+    return i
+
 def Print(instruction, ts, printList,f):
     #add to .dot
     global contador
@@ -44,17 +105,19 @@ def Declaration_(instruction, ts,f):
     type_ = getType(val)
     #print("valor: "+str(val))
     #print("tipo: "+ str(type_))
-    sym = TS.Symbol(instruction.id, type_, val)
+    sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
 
     if ts.exist(instruction.id) != 1:
             ts.add(sym)
     else:
         ts.update(sym)
 
+    print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
     global contador
     f.write("n003 -- n00"+str(contador)+";\n")
     f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
     contador += 1
+
 ####--------resolutions
 def getType(val):
     if isinstance(val, int): return TS.TypeData.INT
@@ -63,27 +126,50 @@ def getType(val):
     elif isinstance(val, str):
         if len(val) == 1: return TS.TypeData.CHAR
 
-
 def valueString(expression, ts):
     if isinstance(expression, String_): return expression.string
     elif isinstance(expression, Number): return str(valueExpression(expression, ts))
     elif isinstance(expression, Identifier): return str(valueExpression(expression, ts))
 
-
 def valueExpression(instruction, ts):
     if isinstance(instruction, BinaryExpression):
         num1 = valueExpression(instruction.op1, ts)
         num2 = valueExpression(instruction.op2, ts)
-
         #if isinstance(num1, str):
             #if isinstance(num2, str):
                 #print("Error: types.")
-
-        #if instruction.operator == Aritmetics.MAS: return num1 + num2
+        if instruction.operator == Aritmetics.MAS: return num1 + num2
         if instruction.operator == Aritmetics.MENOS: return num1 - num2
         elif instruction.operator == Aritmetics.POR: return num1 * num2
         elif instruction.operator == Aritmetics.DIV: return num1 / num2
         elif instruction.operator == Aritmetics.MODULO: return num1 % num2
+
+    elif isinstance(instruction, LogicAndRelational):
+        val1 = valueExpression(instruction.op1, ts)
+        val2 = valueExpression(instruction.op2, ts)
+        if instruction.operator == LogicsRelational.MAYORQUE: 
+            if val1 > val2: return 1
+        elif instruction.operator == LogicsRelational.MENORQUE: 
+            if val1 < val2: return 1
+        elif instruction.operator == LogicsRelational.MAYORIGUAL: 
+            if val1 >= val2: return 1
+        elif instruction.operator == LogicsRelational.MENORIGUAL: 
+            if val1 <= val2: return 1
+        elif instruction.operator == LogicsRelational.IGUALQUE: 
+            if val1 == val2: return 1
+        elif instruction.operator == LogicsRelational.AND: 
+            if val1 >= 1 and val2 >= 1: return 1
+        elif instruction.operator == LogicsRelational.OR: 
+            if val1 >= 1 or val2 >= 1: return 1
+        elif instruction.operator == LogicsRelational.XOR: 
+            if val1 >= 1 ^ val2 >= 1: return 1
+        
+        return 0
+
+    elif isinstance(instruction, Not):
+        num1 = valueExpression(instruction.expression, ts)
+        if num1 >= 1: return 0
+        else: return 1
 
     elif isinstance(instruction, Abs):
         return abs(valueExpression(instruction.expression,ts))
