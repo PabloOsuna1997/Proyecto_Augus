@@ -12,7 +12,7 @@ class TypeData(Enum):
 
 class Symbol() :
     'this class represent a symbol in our symbol table'
-    def __init__(self, id, tipo, valor, declarada = 'main', parametros = [], dimension = 0, referencia = 0) :
+    def __init__(self, id, tipo, valor = {}, declarada = 'main', parametros = [], dimension = 0, referencia = 0) :
         self.id = id
         self.tipo = tipo
         self.valor = valor        

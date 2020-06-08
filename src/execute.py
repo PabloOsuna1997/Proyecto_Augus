@@ -1,11 +1,13 @@
 import grammar as g
 import SymbolTable as TS
+from semanticObject import *
 from expressions import *
 from instructions import *
 
 contador = 4  #for grapho   
-currentAmbit = ''   #current ambit
+currentAmbit = 'main'   #current ambit
 currentParams = []  #list of parameters that the current function will have
+semanticErrorList = []
 
 def execute(input):
     #print(input)
@@ -122,22 +124,30 @@ def Print(instruction, ts, printList,f):
 
 def Declaration_(instruction, ts,f):    
     val = valueExpression(instruction.val, ts)
-    type_ = getType(val)
-    sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
+    if val != 'array':
+        type_ = getType(val)
+        sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
 
-    if ts.exist(instruction.id) != 1:
-        ts.add(sym)
+        if ts.exist(instruction.id) != 1:
+            ts.add(sym)
+        else:
+            ts.update(sym)
+
+        if sym.id[1] == 'a': #params, update label to procediment
+            currentParams.append(sym.id)
+            ts.updateFunction(currentAmbit, TS.TypeData.PROCEDIMIENTO)
+        elif sym.id[1] == 'v':
+            #update label to function
+            ts.updateFunction(currentAmbit, TS.TypeData.FUNCION)
     else:
-        ts.update(sym)
-
-    if sym.id[1] == 'a': #params
-        currentParams.append(sym.id)
-        ts.updateFunction(currentAmbit, TS.TypeData.PROCEDIMIENTO)
-    elif sym.id[1] == 'v':
-        #print(str(sym.id[1]))
-        #update label to function
-        ts.updateFunction(currentAmbit, TS.TypeData.FUNCION)
-
+        type_ = TS.TypeData.ARRAY
+        sym = TS.Symbol(instruction.id, type_, {}, currentAmbit, 0, 0)
+        valueArray(sym, instruction.val, ts)
+       
+        if ts.exist(instruction.id) != 1:
+            ts.add(sym)
+        else:
+            ts.update(sym)       
 
     #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
     global contador
@@ -158,6 +168,45 @@ def valueString(expression, ts):
     elif isinstance(expression, Number): return str(valueExpression(expression, ts))
     elif isinstance(expression, Identifier): return str(valueExpression(expression, ts))
 
+def valueArray(sym, instruction, ts):
+    
+    dictionary = '{\n'
+    i = 0
+    while i < len(instruction.expressionIzq)-1:
+        val = valueExpression(instruction.expressionIzq[i],ts)
+        if isinstance(val, str):
+            dictionary += '\''+val+'\''
+        else:
+            dictionary += str(val)
+        dictionary += ': {'
+        i += 1        
+    o = 0
+    while o < len(instruction.expressionIzq)-2:
+        dictionary += '}'
+        o += 1
+    dictionary += '}\n}'
+    #print(dictionary)
+
+    import ast
+    d = ast.literal_eval(dictionary)
+    sym.valor = d
+    size = len(instruction.expressionIzq)
+    val = d
+    i = 0
+    #print(str(val))
+    while i < len(instruction.expressionIzq)-1:
+        val = val.setdefault(valueExpression(instruction.expressionIzq[i], ts))
+        i +=1
+    #print(str(val))
+    val1 = val.setdefault(valueExpression(instruction.expressionIzq[size-1],ts), valueExpression( instruction.expressionDer,ts))
+    sym.valor = d
+
+def getArray(sym, instruccion, ts):
+    print("get array")
+
+
+
+
 def valueExpression(instruction, ts):
     if isinstance(instruction, BinaryExpression):
         num1 = valueExpression(instruction.op1, ts)
@@ -165,64 +214,82 @@ def valueExpression(instruction, ts):
         #if isinstance(num1, str):
             #if isinstance(num2, str):
                 #print("Error: types.")
-        if instruction.operator == Aritmetics.MAS: return num1 + num2
-        if instruction.operator == Aritmetics.MENOS: return num1 - num2
-        elif instruction.operator == Aritmetics.POR: return num1 * num2
-        elif instruction.operator == Aritmetics.DIV: return num1 / num2
-        elif instruction.operator == Aritmetics.MODULO: return num1 % num2
-
+        try:
+            if instruction.operator == Aritmetics.MAS: return num1 + num2
+            if instruction.operator == Aritmetics.MENOS: return num1 - num2
+            elif instruction.operator == Aritmetics.POR: return num1 * num2
+            elif instruction.operator == Aritmetics.DIV: return num1 / num2
+            elif instruction.operator == Aritmetics.MODULO: return num1 % num2
+        except:
+            seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.')
+            print("Error: types.")
+            semanticErrorList.append(seob)
     elif isinstance(instruction, LogicAndRelational):
         val1 = valueExpression(instruction.op1, ts)
         val2 = valueExpression(instruction.op2, ts)
-        if instruction.operator == LogicsRelational.MAYORQUE: 
-            if val1 > val2: return 1
-        elif instruction.operator == LogicsRelational.MENORQUE: 
-            if val1 < val2: return 1
-        elif instruction.operator == LogicsRelational.MAYORIGUAL: 
-            if val1 >= val2: return 1
-        elif instruction.operator == LogicsRelational.MENORIGUAL: 
-            if val1 <= val2: return 1
-        elif instruction.operator == LogicsRelational.IGUALQUE: 
-            if val1 == val2: return 1
-        elif instruction.operator == LogicsRelational.AND: 
-            if val1 >= 1 and val2 >= 1: return 1
-        elif instruction.operator == LogicsRelational.OR: 
-            if val1 >= 1 or val2 >= 1: return 1
-        elif instruction.operator == LogicsRelational.XOR: 
-            if val1 >= 1 ^ val2 >= 1: return 1
+        try:
+            if instruction.operator == LogicsRelational.MAYORQUE: 
+                if val1 > val2: return 1
+            elif instruction.operator == LogicsRelational.MENORQUE: 
+                if val1 < val2: return 1
+            elif instruction.operator == LogicsRelational.MAYORIGUAL: 
+                if val1 >= val2: return 1
+            elif instruction.operator == LogicsRelational.MENORIGUAL: 
+                if val1 <= val2: return 1
+            elif instruction.operator == LogicsRelational.IGUALQUE: 
+                if val1 == val2: return 1
+            elif instruction.operator == LogicsRelational.AND: 
+                if val1 >= 1 and val2 >= 1: return 1
+            elif instruction.operator == LogicsRelational.OR: 
+                if val1 >= 1 or val2 >= 1: return 1
+            elif instruction.operator == LogicsRelational.XOR: 
+                if val1 >= 1 ^ val2 >= 1: return 1
         
-        return 0
-
+            return 0
+        except:
+            seob = seOb('Error Semantico: Tipos de datos en operacion relacional.')
+            print("Error: types.")
+            semanticErrorList.append(seob)
     elif isinstance(instruction, Not):
         num1 = valueExpression(instruction.expression, ts)
         if num1 >= 1: return 0
         else: return 1
-
     elif isinstance(instruction, Abs):
         return abs(valueExpression(instruction.expression,ts))
-
     elif isinstance(instruction, NegativeNumber):
         num1 = valueExpression(instruction.expression, ts)
         return -1 * num1
-
     elif isinstance(instruction, Identifier):
-        return ts.get(instruction.id).valor
-
+        if ts.exist(instruction.id) == 1:
+            return ts.get(instruction.id).valor
+        else:
+            seob = seOb('Error Semantico: Variable no existe.')
+            print("Error: not fount.")
+            semanticErrorList.append(seob)
     elif isinstance(instruction, Number):
         return instruction.val
-
     elif isinstance(instruction, Cast_):
         num1 = valueExpression(instruction.expression,ts)
-        #print("este es el valor: "+ str(num1))
         if isinstance(num1, int):
-            if(instruction.type == 'float'):
-                # convert float to int 
-                return float(num1)
-        elif isinstance(num1, float):
-            if(instruction.type == 'int'):
-                # convert float to int 
-                #print(num1)
-                return int(num1)
+            if instruction.type == 'float':  return float(num1)
+            elif instruction.type == 'char': return chr(num1)
 
+        elif isinstance(num1, float):
+            if instruction.type == 'int':  return int(num1)
+            elif instruction.type == 'char': return chr(int(num1))               
+
+        elif isinstance(num1, str):
+            if instruction.type == 'int':  return ord(num1[0])
+            elif instruction.type == 'float': return float(ord(num1[0]))
+            elif instruction.type == 'char': return num1[0]
     elif isinstance(instruction, String_):
         return instruction.string
+    elif isinstance(instruction, ExpressionsDeclarationArray):
+        return 'array'
+        '''print("declaracion de array")
+        data = {}
+        #$t1[0]['telefono'][0] = 123456789
+        data[0] = { 'nombre': {0: '1234567489', 1:'987654321'}}
+        data[1] = 2
+        data['name'] = 'juan'
+        print(str(data[0]['nombre'][0])+", "+ str(data['name'])+", "+ str(data[1]))'''

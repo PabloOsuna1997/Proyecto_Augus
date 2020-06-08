@@ -112,3 +112,13 @@ class Read:
 class ReadConsole(Read):
     def __init__(self, read = 1):
         self.read = read
+
+
+###-------------------------array section
+class Array:
+    'this class represent arrays'
+
+class ExpressionsDeclarationArray(Array):
+    def __init__(self, expressionIzq, expressionDer):
+        self.expressionIzq = expressionIzq
+        self.expressionDer = expressionDer

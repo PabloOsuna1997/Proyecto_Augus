@@ -1,5 +1,10 @@
-main: 
-    $a0 = 5; 
+main:
+    $t1 = 103.2;
+    $t1 = (char)$t1;
+    print($t1);
+    $t2 = array();
+    $t2[0]['number'][1] = 412354;
+    $a0 = 10; 
     $ra = 0;
     goto fact; 
 ret0: 
@@ -21,3 +26,5 @@ ret1:
     if ($ra==0) goto ret0; 
     $ra = $ra - 1; 
     goto ret1;
+
+            
