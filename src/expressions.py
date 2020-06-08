@@ -52,9 +52,9 @@ class Abs(NumericExpression):
         self.expression = expression
 
 class IdentifierArray(NumericExpression):
-    def __init__(self, id, expression):
+    def __init__(self, id, expressions):
         self.id = id
-        self.expression = expression
+        self.expressions = expressions
 
 ######----------------Strings section
 class StringExpression:

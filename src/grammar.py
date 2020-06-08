@@ -588,10 +588,7 @@ def p_operacion(t):
                     | MENOS F
                     | NOTLOGICA F
                     | NOTBIT F
-                    | ANDBIT F
-                    | ID CORCHETES '''
-
-    #PENDIENTEE    ID CORCHETES PARA GRAFICAR
+                    | ANDBIT F'''
 
     #code
     #aritmetics
@@ -611,7 +608,7 @@ def p_operacion(t):
         senteList.append(conNode+3)
         conNode += 3
     #endregion
-
+    #print(str(t[1]) +", "+str(t[2]))
     if(t[2] == '+'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS)        
     elif(t[2] == '-'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS)
     elif(t[2] == '*'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR)
@@ -686,20 +683,23 @@ def p_operacion(t):
     elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI)
     elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD)
     
-    else: 
-        t[0] = IdentifierArray(t[1],t[2])
+    
+    #elif t[1] != '-' and t[1] != '!' and t[1] != '&' and t[1] != '~' and len(t) == 2: 
+        #print("id")
+        #t[0] = IdentifierArray(t[1],t[2])
+        #print(str(t[2]))
         #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #id
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #corchetes
-        fgraph.write("n00"+str(conNode+2)+" [label=\"CORCHETES\"] ;\n")  ##3debo hacer un for para sus hijos
-        for i in corcheList:
-            fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
-        corcheList[:] = []
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        conNode += 2
+        #fgraph.write("n00"+str(conNode+1)+";\n")   #id
+        #fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
+        #fgraph.write("n00"+str(conNode+2)+";\n")   #corchetes
+        #fgraph.write("n00"+str(conNode+2)+" [label=\"CORCHETES\"] ;\n")  ##3debo hacer un for para sus hijos
+        #for i in corcheList:
+        #    fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
+        #corcheList[:] = []
+        #fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
+        #senteList.append(conNode+1)
+        #senteList.append(conNode+2)
+        #conNode += 2
         #endregion
 
 def p_numero(t):
@@ -853,7 +853,7 @@ def p_f_id(t):
 
 def p_f_idARRAY(t):
     'F  : ID CORCHETES'
-    t[0] = Identifier(t[1])
+    t[0] = IdentifierArray(t[1],t[2])
     #region
     global contador, conNode, fgraph,corcheList
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")

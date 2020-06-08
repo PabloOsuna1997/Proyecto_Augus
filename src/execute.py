@@ -122,7 +122,8 @@ def Print(instruction, ts, printList,f):
     contador += 1
     printList.append(valueString(instruction.cadena, ts))
 
-def Declaration_(instruction, ts,f):    
+def Declaration_(instruction, ts,f): 
+    print(str(instruction))
     val = valueExpression(instruction.val, ts)
     if val != 'array':
         type_ = getType(val)
@@ -167,25 +168,29 @@ def valueString(expression, ts):
     if isinstance(expression, String_): return expression.string
     elif isinstance(expression, Number): return str(valueExpression(expression, ts))
     elif isinstance(expression, Identifier): return str(valueExpression(expression, ts))
+    else: return str(valueExpression(expression, ts))
 
 def valueArray(sym, instruction, ts):
-    
+    #VALIDAR QUE NO SOBREESCRIBA CADA DICCIONARIO
     dictionary = '{\n'
     i = 0
-    while i < len(instruction.expressionIzq)-1:
-        val = valueExpression(instruction.expressionIzq[i],ts)
-        if isinstance(val, str):
-            dictionary += '\''+val+'\''
-        else:
-            dictionary += str(val)
-        dictionary += ': {'
-        i += 1        
-    o = 0
-    while o < len(instruction.expressionIzq)-2:
+    if len(instruction.expressionIzq) == 1:
         dictionary += '}'
-        o += 1
-    dictionary += '}\n}'
-    #print(dictionary)
+    else:
+        while i < len(instruction.expressionIzq)-1:
+            val = valueExpression(instruction.expressionIzq[i],ts)
+            if isinstance(val, str):
+                dictionary += '\''+val+'\''
+            else:
+                dictionary += str(val)
+            dictionary += ': {'
+            i += 1        
+        o = 0
+        while o < len(instruction.expressionIzq)-2:
+            dictionary += '}'
+            o += 1
+        dictionary += '}\n}'
+    print(dictionary)
 
     import ast
     d = ast.literal_eval(dictionary)
@@ -203,9 +208,6 @@ def valueArray(sym, instruction, ts):
 
 def getArray(sym, instruccion, ts):
     print("get array")
-
-
-
 
 def valueExpression(instruction, ts):
     if isinstance(instruction, BinaryExpression):
@@ -293,3 +295,22 @@ def valueExpression(instruction, ts):
         data[1] = 2
         data['name'] = 'juan'
         print(str(data[0]['nombre'][0])+", "+ str(data['name'])+", "+ str(data[1]))'''
+    elif isinstance(instruction, IdentifierArray):
+        print("id array")
+        print("id: "+ instruction.id)
+        sym = ts.get(instruction.id).valor
+        print("valor: "+ str(sym))
+        import ast
+        d = ast.literal_eval(str(sym))
+        print(d)
+        tmp = d
+        i = 0
+
+        while i < len(instruction.expressions)-1:
+            tmp = d.setdefault(valueExpression(instruction.expressions[i],ts))
+            print(str(tmp))
+            i += 1
+
+        result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
+        print("Resultado de la consulta: " + str(result))
+        return result

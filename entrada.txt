@@ -1,30 +1,9 @@
 main:
-    $t1 = 103.2;
-    $t1 = (char)$t1;
-    print($t1);
     $t2 = array();
-    $t2[0]['number'][1] = 412354;
-    $a0 = 10; 
-    $ra = 0;
-    goto fact; 
-ret0: 
-    print($v0); 
-    exit; 
-fact: 
-    if ($a0>1) goto sino; 
-    $v0 = 1; 
-    if ($ra == 0) goto ret0; 
-    $ra = $ra - 1; 
-    goto ret1; 
-sino: 
-    $a0 = $a0 - 1; 
-    $ra = $ra + 1; #level ++ 
-    goto fact; 
-ret1: 
-    $a0 = $a0 + 1; 
-    $v0 = $a0 * $v0; 
-    if ($ra==0) goto ret0; 
-    $ra = $ra - 1; 
-    goto ret1;
+    $t2[0] = 9;
+    $t3[0] = $t2[0];
+    print($t3[0]);
+    $t2[0]['nombre'] = 'juan';
+    $t3[1] = $t2[0]['nombre'];
+    print($t3[1]);
 
-            
