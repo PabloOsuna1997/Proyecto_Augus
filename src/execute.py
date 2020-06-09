@@ -127,7 +127,7 @@ def Print(instruction, ts, printList,f):
     printList.append(valueString(instruction.cadena, ts))
 
 def Declaration_(instruction, ts,f): 
-    print(str(instruction))
+    #print(str(instruction))
     val = valueExpression(instruction.val, ts)
     if val != 'array':
         type_ = getType(val)
@@ -216,7 +216,7 @@ def valueArray(id, instruction, ts, valor):
     val1 = val.setdefault(valueExpression(instruction.expressionIzq[size-1],ts), valueExpression( instruction.expressionDer,ts))
     
     d = update(copy.deepcopy(valor), d)
-    print(str(d))
+    #print(str(d))
     return d
 
 def update(d1, d2):
@@ -267,6 +267,8 @@ def valueExpression(instruction, ts):
                 if val1 >= 1 or val2 >= 1: return 1
             elif instruction.operator == LogicsRelational.XOR: 
                 if val1 >= 1 ^ val2 >= 1: return 1
+            elif instruction.operator == LogicsRelational.DIFERENTE:
+                if val1 != val2: return 1
         
             return 0
         except:
@@ -317,13 +319,13 @@ def valueExpression(instruction, ts):
         #print("expresionesssss " + str(instruction.expressions))
         #print("expresionesssss[0] " + str(valueExpression(instruction.expressions[0], ts)))
         d = ast.literal_eval(str(sym))
-        print(d)
+        #print(d)
         tmp = d
         i = 0
         while i < len(instruction.expressions)-1:
             value = valueExpression(instruction.expressions[i], ts)
             tmp = tmp.setdefault(value, ts)
-            print(str(tmp))
+            #print(str(tmp))
             i += 1
 
         result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))

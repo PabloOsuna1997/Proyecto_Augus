@@ -118,7 +118,7 @@ class Ui_Augus(object):
         self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
                                             color: rgb(51, 252, 255);
-                                            font: 15pt \"console\";''' )
+                                            font: 15pt \"consolas\";''' )
         self.textEditConsole.setPlainText("CONSOLE:\n")
 
     def retranslateUi(self, Augus):
@@ -156,7 +156,7 @@ class Ui_Augus(object):
         self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
                                             color: rgb(255, 255, 255);
-                                            font: 15pt \"console\";''' )
+                                            font: 15pt \"consolas\";''' )
         self.textEdit.setObjectName("textEdit")
         self.tabWidget.addTab(
             self.tab,"Tab "+ str(contadorVentanas)
@@ -183,7 +183,7 @@ class Ui_Augus(object):
                 self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
                                             color: rgb(255, 255, 255);
-                                            font: 15pt \"console\";''' )
+                                            font: 15pt \"consolas\";''' )
                 self.textEdit.setObjectName("textEdit")
                 self.textEdit.setPlainText(data)
                 #self.textEdit.setTextBackgroundColor( QColor ( "Gray"))
@@ -207,15 +207,15 @@ class Ui_Augus(object):
             fgraph.write("graph \"\" {")
             fgraph.close()
 
-            #content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
 
-            f = open("../entrada.txt", "r")
-            content = f.read()            
+            #f = open("../entrada.txt", "r")
+            #content = f.read()            
             #print(str(content))
             #analysis
             result = grammar.parse(content)
-            f.flush()           
-            f.close()
+            #f.flush()           
+            #f.close()
             #print(str(content))
             
             if len(result) == 0:
