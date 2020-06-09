@@ -1,9 +1,4 @@
 main:
     $t2 = array();
-    $t2[0] = 9;
-    $t3[0] = $t2[0];
-    print($t3[0]);
-    $t2[0]['nombre'] = 'juan';
-    $t3[1] = $t2[0]['nombre'];
-    print($t3[1]);
-
+    $t2[0]['telefono'][0] = 123456789;
+    print($t2[0]['telefono'][0]);

@@ -899,7 +899,25 @@ import ply.yacc as yacc
 parser = yacc.yacc()
 
 def parse(input):
-    global input_, fgraph
+    global input_, fgraph, primeravez, treeList, contador, contadorSente, conNode, senteList, senteList_, corcheList, bandera
+    global corcheListaux, csList, sentenciaHija, res, fgraph
+    primeravez = 0
+    treeList = [] #list for save nodes
+    contador = 0
+    contadorSente = 1
+    conNode = 1
+    senteList = [] #para guardar las sentencias y despues apuntarlas
+    senteList_ = []
+    corcheList = []
+    bandera = 0
+    corcheListaux = []
+    corcheListaux = []
+    csList = []
+    sentenciaHija = 0
+    bandera = 0
+    res = []
+    fgraph = ''
+
     input_ = input
     fgraph = open('../reports/ast.dot','a') #creamos el archivo
     fgraph.write("\n") 

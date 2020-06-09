@@ -3,6 +3,9 @@ import SymbolTable as TS
 from semanticObject import *
 from expressions import *
 from instructions import *
+import ast
+import copy
+import collections
 
 contador = 4  #for grapho   
 currentAmbit = 'main'   #current ambit
@@ -17,6 +20,7 @@ def execute(input):
     f.write("n000 -- n001;\n")
     f.write("n001 [label=\"Instrucciones\"] ;\n")
 
+    tsGlobal = []
     tsGlobal = TS.SymbolTable()
     printList = []
     process(input,tsGlobal, printList,f)
@@ -141,16 +145,23 @@ def Declaration_(instruction, ts,f):
             #update label to function
             ts.updateFunction(currentAmbit, TS.TypeData.FUNCION)
     else:
+        valor = {}
+        if ts.exist(instruction.id) == 1: 
+            valor = ts.get(instruction.id).valor       
+
+        if isinstance(instruction.val, ExpressionsDeclarationArray):
+            valor = valueArray(instruction.id, instruction.val, ts, valor)
+            #print("res: " + str(valor))
+        
         type_ = TS.TypeData.ARRAY
-        sym = TS.Symbol(instruction.id, type_, {}, currentAmbit, 0, 0)
-        valueArray(sym, instruction.val, ts)
-       
-        if ts.exist(instruction.id) != 1:
+        sym = TS.Symbol(instruction.id, type_, valor, currentAmbit, 0, 0)
+        #valueArray(sym, instruction.val, ts)        
+        if ts.exist(instruction.id) != 1: 
             ts.add(sym)
         else:
             ts.update(sym)       
 
-    #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
+        #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
     global contador
     f.write("n003 -- n00"+str(contador)+";\n")
     f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
@@ -170,7 +181,7 @@ def valueString(expression, ts):
     elif isinstance(expression, Identifier): return str(valueExpression(expression, ts))
     else: return str(valueExpression(expression, ts))
 
-def valueArray(sym, instruction, ts):
+def valueArray(id, instruction, ts, valor):
     #VALIDAR QUE NO SOBREESCRIBA CADA DICCIONARIO
     dictionary = '{\n'
     i = 0
@@ -190,11 +201,10 @@ def valueArray(sym, instruction, ts):
             dictionary += '}'
             o += 1
         dictionary += '}\n}'
-    print(dictionary)
 
-    import ast
-    d = ast.literal_eval(dictionary)
-    sym.valor = d
+    d = ast.literal_eval(dictionary)    
+    #print("valor actual: "+ str(valor))
+    #print("valor a adjuntar: "+ str(d))
     size = len(instruction.expressionIzq)
     val = d
     i = 0
@@ -204,7 +214,18 @@ def valueArray(sym, instruction, ts):
         i +=1
     #print(str(val))
     val1 = val.setdefault(valueExpression(instruction.expressionIzq[size-1],ts), valueExpression( instruction.expressionDer,ts))
-    sym.valor = d
+    
+    d = update(copy.deepcopy(valor), d)
+    print(str(d))
+    return d
+
+def update(d1, d2):
+    for key, value in d2.items():
+        if value and isinstance(value, collections.Mapping):
+            d1[key] = update(d1.get(key, {}), value)
+        else:
+            d1[key] = d2[key]
+    return d1
 
 def getArray(sym, instruccion, ts):
     print("get array")
@@ -286,31 +307,25 @@ def valueExpression(instruction, ts):
             elif instruction.type == 'char': return num1[0]
     elif isinstance(instruction, String_):
         return instruction.string
-    elif isinstance(instruction, ExpressionsDeclarationArray):
-        return 'array'
-        '''print("declaracion de array")
-        data = {}
-        #$t1[0]['telefono'][0] = 123456789
-        data[0] = { 'nombre': {0: '1234567489', 1:'987654321'}}
-        data[1] = 2
-        data['name'] = 'juan'
-        print(str(data[0]['nombre'][0])+", "+ str(data['name'])+", "+ str(data[1]))'''
+    elif isinstance(instruction, ExpressionsDeclarationArray): return 'array'
+    elif instruction == 'array': return 'array'
     elif isinstance(instruction, IdentifierArray):
-        print("id array")
-        print("id: "+ instruction.id)
+        #print("id array")
+        #print("id: "+ instruction.id)
         sym = ts.get(instruction.id).valor
-        print("valor: "+ str(sym))
-        import ast
+        #print("valor: "+ str(sym))
+        #print("expresionesssss " + str(instruction.expressions))
+        #print("expresionesssss[0] " + str(valueExpression(instruction.expressions[0], ts)))
         d = ast.literal_eval(str(sym))
         print(d)
         tmp = d
         i = 0
-
         while i < len(instruction.expressions)-1:
-            tmp = d.setdefault(valueExpression(instruction.expressions[i],ts))
+            value = valueExpression(instruction.expressions[i], ts)
+            tmp = tmp.setdefault(value, ts)
             print(str(tmp))
             i += 1
 
         result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
-        print("Resultado de la consulta: " + str(result))
+        #print("Resultado de la consulta: " + str(result))
         return result
