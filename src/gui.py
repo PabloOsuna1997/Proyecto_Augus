@@ -8,6 +8,7 @@
 
 import grammar
 import reportGenerator as rg
+import reportSemantic 
 import execute
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -15,12 +16,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFil
 #from PyQt5.QtGui import QColor
 
 contadorVentanas = 0
-cantidadEjecuciones = 0
-lineasBefore = 0
-lines = 0
 data = []
 dataS = []
-result = []
 class Ui_Augus(object):
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
@@ -60,6 +57,10 @@ class Ui_Augus(object):
         self.actionReporteLexico.setObjectName("actionReporteLexico")
         self.actionReporteSintactico = QtWidgets.QAction(Augus)
         self.actionReporteSintactico.setObjectName("actionReporteSintactico")
+        self.actionReporteSemantico = QtWidgets.QAction(Augus)
+        self.actionReporteSemantico.setObjectName("actionReporteSemantico")
+        self.actionReporteTS = QtWidgets.QAction(Augus)
+        self.actionReporteTS.setObjectName("actionReporteTS")
         self.actionAbrir = QtWidgets.QAction(Augus)
         self.actionAbrir.setObjectName("actionAbrir")
         self.actionGuardar = QtWidgets.QAction(Augus)
@@ -89,6 +90,8 @@ class Ui_Augus(object):
         self.menuArchivo.addAction(self.actionNuevo)
         self.menuReportes.addAction(self.actionReporteLexico)
         self.menuReportes.addAction(self.actionReporteSintactico)
+        self.menuReportes.addAction(self.actionReporteSemantico)
+        self.menuReportes.addAction(self.actionReporteTS)
         self.menuArchivo.addAction(self.actionAbrir)
         self.menuArchivo.addAction(self.actionGuardar)
         self.menuArchivo.addAction(self.actionGuardar_Como)
@@ -125,12 +128,14 @@ class Ui_Augus(object):
         self.actionSalir.triggered.connect(lambda : self.fn_Salir())
         self.actionReporteLexico.triggered.connect(lambda : self.fn_repLexico())
         self.actionReporteSintactico.triggered.connect(lambda : self.fn_repSintactico())
+        self.actionReporteSemantico.triggered.connect(lambda : self.fn_repSemantico())
+        self.actionReporteSemantico.triggered.connect(lambda : self.fn_repTS())
 
 
         self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
                                             color: rgb(51, 252, 255);
-                                            font: 15pt \"consolas\";''' )
+                                            font: 12pt \"consolas\";''' )
         self.textEditConsole.setPlainText("CONSOLE:\n")
 
     def retranslateUi(self, Augus):
@@ -145,6 +150,8 @@ class Ui_Augus(object):
         self.actionNuevo.setText(_translate("Augus", "Nuevo"))
         self.actionReporteLexico.setText(_translate("Augus", "Reporte Lexico"))
         self.actionReporteSintactico.setText(_translate("Augus", "Reporte Sintactico"))
+        self.actionReporteSemantico.setText(_translate("Augus", "Reporte Semantico"))
+        self.actionReporteTS.setText(_translate("Augus", "Reporte Tabla de Simbolos"))
         self.actionAbrir.setText(_translate("Augus", "Abrir"))
         self.actionGuardar.setText(_translate("Augus", "Guardar"))
         self.actionGuardar_Como.setText(_translate("Augus", "Guardar Como"))
@@ -169,7 +176,7 @@ class Ui_Augus(object):
         self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
                                             color: rgb(255, 255, 255);
-                                            font: 15pt \"consolas\";''' )
+                                            font: 12pt \"consolas\";''' )
         self.textEdit.setObjectName("textEdit")
         self.tabWidget.addTab(
             self.tab,"Tab "+ str(contadorVentanas)
@@ -196,7 +203,7 @@ class Ui_Augus(object):
                 self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
                                             color: rgb(255, 255, 255);
-                                            font: 15pt \"consolas\";''' )
+                                            font: 12pt \"consolas\";''' )
                 self.textEdit.setObjectName("textEdit")
                 self.textEdit.setPlainText(data)
                 self.tabWidget.addTab(
@@ -209,6 +216,26 @@ class Ui_Augus(object):
         except:
             print("closing file dialog.")
 
+    def fn_repTS(self):
+        print("reporte de tabla de simbolos")
+
+    def fn_repSemantico(self):
+        try:
+            print("reportando semantico")
+            print("errores : "+str(execute.semanticErrorList))
+            dataSe = [("DESCRIPCION", " ")]
+            for i in execute.semanticErrorList:
+                print(str(i.description))
+                dataSe.append((str(i.description), ' '))
+
+            reportSemantic.export_to_pdf(dataSe,3)
+            import os
+            os.startfile('..\\reports\\semanticReport.pdf')
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Porfavor cierre el reporte de errores semanticos.")
+            self.msgBox.exec()
+
     def fn_repSintactico(self):
         print("reportando sintactico")
         global dataS
@@ -218,7 +245,7 @@ class Ui_Augus(object):
             grammar.sintacticErroList[:] = []           
 
             self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("deployment report")
+            self.msgBox.setText("Despelgando reporte.")
             self.msgBox.exec()
             import os
             os.startfile('..\\reports\\sintacticReport.pdf')
@@ -227,8 +254,6 @@ class Ui_Augus(object):
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("please close report sintactic.")
             self.msgBox.exec()
-            dataS[:] = []
-            grammar.sintacticErroList[:] = []
     
     def fn_repLexico(self):
         print("reportando lexico")
@@ -239,7 +264,7 @@ class Ui_Augus(object):
             grammar.LexicalErrosList[:] = []           
 
             self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("deployment report")
+            self.msgBox.setText("Despelgando reporte.")
             self.msgBox.exec()
             import os
             os.startfile('..\\reports\\lexicalReport.pdf')
@@ -247,11 +272,9 @@ class Ui_Augus(object):
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("please close report lexical.")
             self.msgBox.exec()
-            data[:] = []
-            grammar.LexicalErrosList[:] = []
         
     def fn_Ejecutar_Ascendente(self):
-        try:            
+        #try:            
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
@@ -259,72 +282,26 @@ class Ui_Augus(object):
             fgraph = open('../reports/graph.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
-            lines = 0
-            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-            words = content.split('\n')
-            lines = len(words)
-            auxLine = lines
 
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             result = grammar.parse(content)
 
             # si exists errores lexicos o sintacticos traera una lista vacia
             if len(result) == 0:
+                global data, dataS
                 self.msgBox = QtWidgets.QMessageBox()
-                self.msgBox.setText("this file contains lexical or syntactical errors.")
+                self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
                 self.msgBox.exec()
 
-                if len(grammar.LexicalErrosList) > 0:
-                    global lineasBefore, data, dataS
-                    print("Errores Lexicos: "+ str(grammar.LexicalErrosList))
-                    aux = lineasBefore
-
-                    if lineasBefore != lines and lineasBefore != 0:
-                        if lineasBefore < lines :
-                            for i in grammar.LexicalErrosList:
-                                i.line = i.line - (lines - lineasBefore)
-                        else:
-                            for i in grammar.LexicalErrosList:
-                                i.line = i.line + (lineasBefore - lines)
-
-                    can = grammar.LexicalErrosList[0].line / lines
-                    if can >= 1:
-                        lines = lines * can
-
-                    result = grammar.LexicalErrosList
+                if len(grammar.LexicalErrosList) > 0:                    
                     data = [("LEXEMA", "COLUMNA", "LINEA")]
-                    for i in result:
-                        line = i.line
-                        if (i.line - (lines-1)) > 0:
-                            line = round(i.line-(lines-1))
-                        data.append((str(i.lexema), str(i.column), str(line)))
+                    for i in grammar.LexicalErrosList:
+                        data.append((str(i.lexema), str(i.column), str(i.line)))
                 
-                if len(grammar.sintacticErroList) > 0:
-                    lines = auxLine
-                    aux = lineasBefore
-                    if lineasBefore != lines and lineasBefore != 0:
-                        if lineasBefore < lines :
-                            for i in grammar.sintacticErroList:
-                                i.line = i.line - (lines - lineasBefore)
-                        else:
-                            for i in grammar.sintacticErroList:
-                                i.line = i.line + (lineasBefore - lines)
-                    can = 0
-                    can = (grammar.sintacticErroList[0].line +1) / (lines)
-                    if can >= 1:
-                        lines = (lines) * can
-
-                    #print(str(grammar.sintacticErroList))
-                    result = grammar.sintacticErroList
+                if len(grammar.sintacticErroList) > 0:                    
                     dataS = [("LEXEMA", "COLUMNA", "LINEA")]
-                    for i in result:                        
-                        line = i.line
-                        if ((i.line) - (lines-2)) > 0:
-                            line = round((i.line)-(lines-2)+1)
-                        dataS.append((str(i.lexema), str(i.column), str(line)))
-
-                    lineasBefore = auxLine
-                    lines = auxLine
-                
+                    for i in grammar.sintacticErroList:
+                        dataS.append((str(i.lexema), str(i.column), str(i.line)))
             else:
                 #not exist errors
                 printList = execute.execute(result)
@@ -336,9 +313,16 @@ class Ui_Augus(object):
                     self.textEditConsole.append("> " + str(element) + "\n")
                     print( "> " + str(element))
                 
-                self.msgBox = QtWidgets.QMessageBox()
-                self.msgBox.setText("Correct Analysis.")
-                self.msgBox.exec()
+                if len(execute.semanticErrorList) < 0:
+
+                    self.msgBox = QtWidgets.QMessageBox()
+                    self.msgBox.setText("Correct Analysis.")
+                    self.msgBox.exec()
+                
+                else:
+                    self.msgBox = QtWidgets.QMessageBox()
+                    self.msgBox.setText("Exist semacntics errors.")
+                    self.msgBox.exec()
 
             #creat to report
             fgraph = open('../reports/ast.dot','a') #agregamos al archivo '}'
@@ -358,10 +342,10 @@ class Ui_Augus(object):
 
             sys.stdout.flush()
             
-        except:
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Empty Area.")
-            self.msgBox.exec()
+        #except:
+            #self.msgBox = QtWidgets.QMessageBox()
+            #self.msgBox.setText("Empty Area.")
+            #self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
         try:

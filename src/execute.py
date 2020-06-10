@@ -14,6 +14,12 @@ semanticErrorList = []
 
 def execute(input):
     #print(input)
+    global semanticErrorList, currentAmbit, currentParams, contador
+    contador = 4  #for grapho   
+    currentAmbit = 'main'   #current ambit
+    currentParams[:] = []  #list of parameters that the current function will have
+    semanticErrorList[:] = []
+
     f = open("../reports/graph.dot","a")
     f.write("n000 ;\n")
     f.write("n000 [label=\"Inicio\"] ;\n")
@@ -23,6 +29,7 @@ def execute(input):
     tsGlobal = []
     tsGlobal = TS.SymbolTable()
     printList = []
+    semanticErrorList = []
     process(input,tsGlobal, printList,f)
     f.close()
     print("Tabla de simbolos: ")
@@ -56,6 +63,8 @@ def process(instructions, ts, printList,f):
                 else:
                     i = tmp
                     #print("error semantico, etiqueta no existe")
+                    se = seOb(f"Error: etiqueta {b.label} no existe")
+                    semanticErrorList.append(se)
             #else:
                 #print("false")
         elif isinstance(b, Goto):
@@ -68,6 +77,8 @@ def process(instructions, ts, printList,f):
             else:
                 i = tmp
                 #print("error semantico, etiqueta no existe")
+                se = seOb(f"Error: etiqueta {b.label} no existe")
+                semanticErrorList.append(se)
         elif isinstance(b, Label):
             #insert to symbols table
             #type_ = 0
@@ -220,12 +231,17 @@ def valueArray(id, instruction, ts, valor):
     return d
 
 def update(d1, d2):
-    for key, value in d2.items():
-        if value and isinstance(value, collections.Mapping):
-            d1[key] = update(d1.get(key, {}), value)
-        else:
-            d1[key] = d2[key]
-    return d1
+    try:
+        for key, value in d2.items():
+            if value and isinstance(value, collections.Mapping):
+                d1[key] = update(d1.get(key, {}), value)
+            else:
+                d1[key] = d2[key]
+        return d1
+    except:
+        seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.')
+        semanticErrorList.append(seob)
+        return {}
 
 def getArray(sym, instruccion, ts):
     print("get array")
@@ -245,8 +261,8 @@ def valueExpression(instruction, ts):
             elif instruction.operator == Aritmetics.MODULO: return num1 % num2
         except:
             seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.')
-            print("Error: types.")
             semanticErrorList.append(seob)
+            return 0
     elif isinstance(instruction, LogicAndRelational):
         val1 = valueExpression(instruction.op1, ts)
         val2 = valueExpression(instruction.op2, ts)
@@ -272,25 +288,49 @@ def valueExpression(instruction, ts):
         
             return 0
         except:
-            seob = seOb('Error Semantico: Tipos de datos en operacion relacional.')
-            print("Error: types.")
-            semanticErrorList.append(seob)
+            se = seOb('Error : Tipos de datos en operacion relacional.')
+            semanticErrorList.append(se)
+            return 0
     elif isinstance(instruction, Not):
-        num1 = valueExpression(instruction.expression, ts)
-        if num1 >= 1: return 0
-        else: return 1
+        try:
+            num1 = valueExpression(instruction.expression, ts)
+            if num1 >= 1: return 0
+            else: return 1
+        except:
+            se = seOb(f'Error: Tipos de datos en la operacion Not {valueExpression(instruction.expression,ts)}.')
+            semanticErrorList.append(se)
+            return 0
     elif isinstance(instruction, Abs):
-        return abs(valueExpression(instruction.expression,ts))
+        try:
+            return abs(valueExpression(instruction.expression,ts))
+        except:
+            se = seOb(f'Error: Tipos de datos en la operacion Abs {valueExpression(instruction.expression,ts)}.')
+            semanticErrorList.append(se)
+            return 0
     elif isinstance(instruction, NegativeNumber):
-        num1 = valueExpression(instruction.expression, ts)
-        return -1 * num1
+        try:
+            num1 = valueExpression(instruction.expression, ts)
+            if isinstance(num1, int) or isinstance(num1, float):
+                return -1 * num1
+            else:
+                se = seOb(f'Error: No se puede aplicar negativo a {num1}.')
+                semanticErrorList.append(se)
+                return 0
+        except:
+            se = seOb(f'Error: No se puede aplicar negativo a {num1}.')
+            semanticErrorList.append(se)
+            return 0
     elif isinstance(instruction, Identifier):
         if ts.exist(instruction.id) == 1:
-            return ts.get(instruction.id).valor
+            if ts.get(instruction.id).tipo != TS.TypeData.INT and ts.get(instruction.id).tipo != TS.TypeData.FLOAT:
+                se = seOb(f'Error: No se puede aplicar negativo a {instruction.id} porque es no es un datro numerico.')
+                semanticErrorList.append(se)
+                return 0
+            else: return ts.get(instruction.id).valor
         else:
-            seob = seOb('Error Semantico: Variable no existe.')
-            print("Error: not fount.")
-            semanticErrorList.append(seob)
+            se = seOb(f'Error Semantico: Variable  {instruction.id} no existe.')
+            semanticErrorList.append(se)
+            return 0
     elif isinstance(instruction, Number):
         return instruction.val
     elif isinstance(instruction, Cast_):
@@ -312,22 +352,23 @@ def valueExpression(instruction, ts):
     elif isinstance(instruction, ExpressionsDeclarationArray): return 'array'
     elif instruction == 'array': return 'array'
     elif isinstance(instruction, IdentifierArray):
-        #print("id array")
-        #print("id: "+ instruction.id)
         sym = ts.get(instruction.id).valor
-        #print("valor: "+ str(sym))
-        #print("expresionesssss " + str(instruction.expressions))
-        #print("expresionesssss[0] " + str(valueExpression(instruction.expressions[0], ts)))
         d = ast.literal_eval(str(sym))
-        #print(d)
         tmp = d
         i = 0
         while i < len(instruction.expressions)-1:
             value = valueExpression(instruction.expressions[i], ts)
             tmp = tmp.setdefault(value, ts)
-            #print(str(tmp))
+            if tmp == None:
+                se = seOb(f'Error: Indice {value} del arreglo no existe.')
+                semanticErrorList.append(se)
+                return 0
             i += 1
 
         result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
         #print("Resultado de la consulta: " + str(result))
         return result
+    elif isinstance(instruction, ReadConsole):
+        #lectura de consola
+        valor = input()
+        return valor

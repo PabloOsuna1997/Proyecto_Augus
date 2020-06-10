@@ -201,25 +201,10 @@ def p_init(t):
     fgraph.write("n00"+str(conNode+2)+" [label=\"S\"] ;\n")
     fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode+1)+";\n")
     conNode +=3
+    #endregion
     
     fgraph.flush()
     fgraph.close()
-
-    ####ejecutar analisis
-    '''treeList.reverse() 
-    level = treeList[0].level
-    for i in treeList:
-        if i.level == level:
-            print("etiqueta: "+ str(i.label) + " , level: "+ str(i.level) +" , sente: " + str(i.sente))
-
-        else:
-            print("--->")
-            level -= 1
-            print("etiqueta: "+ str(i.label) + " , level: "+ str(i.level) +" , sente: " + str(i.sente))'''
-    #endregion
-
-def RecursiveFunction(padre):
-    print("sdd")
 
 def p_main(t):
     'A : MAIN DOSPUNTOS SENTENCIAS'
@@ -678,25 +663,6 @@ def p_operacion(t):
     elif(t[2] == '^'): t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT)
     elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI)
     elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD)
-    
-    
-    #elif t[1] != '-' and t[1] != '!' and t[1] != '&' and t[1] != '~' and len(t) == 2: 
-        #print("id")
-        #t[0] = IdentifierArray(t[1],t[2])
-        #print(str(t[2]))
-        #region
-        #fgraph.write("n00"+str(conNode+1)+";\n")   #id
-        #fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-        #fgraph.write("n00"+str(conNode+2)+";\n")   #corchetes
-        #fgraph.write("n00"+str(conNode+2)+" [label=\"CORCHETES\"] ;\n")  ##3debo hacer un for para sus hijos
-        #for i in corcheList:
-        #    fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
-        #corcheList[:] = []
-        #fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        #senteList.append(conNode+1)
-        #senteList.append(conNode+2)
-        #conNode += 2
-        #endregion
 
 def p_numero(t):
     'ATOMICO     : F'
@@ -920,6 +886,7 @@ def parse(input):
     fgraph.write("\n") 
     #print(input_)
     instructions = parser.parse(input)
+    lexer.lineno = 1
     parser.restart()
     if len(LexicalErrosList) > 0 or len(sintacticErroList) > 0:
         if instructions == None:
