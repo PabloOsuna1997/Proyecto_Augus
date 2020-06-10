@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 import grammar
+import reportGenerator as rg
 import execute
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -14,6 +15,12 @@ from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFil
 #from PyQt5.QtGui import QColor
 
 contadorVentanas = 0
+cantidadEjecuciones = 0
+lineasBefore = 0
+lines = 0
+data = []
+dataS = []
+result = []
 class Ui_Augus(object):
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
@@ -51,6 +58,8 @@ class Ui_Augus(object):
         self.actionNuevo.setObjectName("actionNuevo")
         self.actionReporteLexico = QtWidgets.QAction(Augus)
         self.actionReporteLexico.setObjectName("actionReporteLexico")
+        self.actionReporteSintactico = QtWidgets.QAction(Augus)
+        self.actionReporteSintactico.setObjectName("actionReporteSintactico")
         self.actionAbrir = QtWidgets.QAction(Augus)
         self.actionAbrir.setObjectName("actionAbrir")
         self.actionGuardar = QtWidgets.QAction(Augus)
@@ -79,6 +88,7 @@ class Ui_Augus(object):
         self.actionAyuda.setObjectName("actionAyuda")
         self.menuArchivo.addAction(self.actionNuevo)
         self.menuReportes.addAction(self.actionReporteLexico)
+        self.menuReportes.addAction(self.actionReporteSintactico)
         self.menuArchivo.addAction(self.actionAbrir)
         self.menuArchivo.addAction(self.actionGuardar)
         self.menuArchivo.addAction(self.actionGuardar_Como)
@@ -113,6 +123,8 @@ class Ui_Augus(object):
         self.actionGuardar_Como.triggered.connect(lambda : self.fn_Guardar_Como())
         self.actionCerrar.triggered.connect(lambda : self.fn_Cerrar())
         self.actionSalir.triggered.connect(lambda : self.fn_Salir())
+        self.actionReporteLexico.triggered.connect(lambda : self.fn_repLexico())
+        self.actionReporteSintactico.triggered.connect(lambda : self.fn_repSintactico())
 
 
         self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
@@ -132,6 +144,7 @@ class Ui_Augus(object):
         self.menuAyuda.setTitle(_translate("Augus", "Ayuda"))
         self.actionNuevo.setText(_translate("Augus", "Nuevo"))
         self.actionReporteLexico.setText(_translate("Augus", "Reporte Lexico"))
+        self.actionReporteSintactico.setText(_translate("Augus", "Reporte Sintactico"))
         self.actionAbrir.setText(_translate("Augus", "Abrir"))
         self.actionGuardar.setText(_translate("Augus", "Guardar"))
         self.actionGuardar_Como.setText(_translate("Augus", "Guardar Como"))
@@ -174,7 +187,7 @@ class Ui_Augus(object):
             print(path)
             with open(path, 'r') as f:
                 data = f.read()
-            
+                            
                 #creating a new tab
                 self.tab = QtWidgets.QWidget()
                 self.tab.setObjectName("tab")
@@ -186,7 +199,6 @@ class Ui_Augus(object):
                                             font: 15pt \"consolas\";''' )
                 self.textEdit.setObjectName("textEdit")
                 self.textEdit.setPlainText(data)
-                #self.textEdit.setTextBackgroundColor( QColor ( "Gray"))
                 self.tabWidget.addTab(
                     self.tab,path
                 )
@@ -197,8 +209,49 @@ class Ui_Augus(object):
         except:
             print("closing file dialog.")
 
+    def fn_repSintactico(self):
+        print("reportando sintactico")
+        global dataS
+        try:
+            rg.export_to_pdf(dataS,2)
+            dataS[:] = []
+            grammar.sintacticErroList[:] = []           
+
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("deployment report")
+            self.msgBox.exec()
+            import os
+            os.startfile('..\\reports\\sintacticReport.pdf')
+        except:
+            print("error")
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("please close report sintactic.")
+            self.msgBox.exec()
+            dataS[:] = []
+            grammar.sintacticErroList[:] = []
+    
+    def fn_repLexico(self):
+        print("reportando lexico")
+        global data
+        try:
+            rg.export_to_pdf(data,1)
+            data[:] = []
+            grammar.LexicalErrosList[:] = []           
+
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("deployment report")
+            self.msgBox.exec()
+            import os
+            os.startfile('..\\reports\\lexicalReport.pdf')
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("please close report lexical.")
+            self.msgBox.exec()
+            data[:] = []
+            grammar.LexicalErrosList[:] = []
+        
     def fn_Ejecutar_Ascendente(self):
-        #try:
+        #try:            
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
@@ -206,25 +259,74 @@ class Ui_Augus(object):
             fgraph = open('../reports/graph.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
+            lines = 0
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            words = content.split('\n')
+            lines = len(words)
 
-            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()          
-
-            #f = open("../entrada.txt", "r")
-            #content = f.read()            
-            #print(str(content))
-            #analysis
             result = grammar.parse(content)
-            #f.flush()           
-            #f.close()
-            #print(str(content))
-            
+
+            # si exists errores lexicos o sintacticos traera una lista vacia
             if len(result) == 0:
-                print("Errores Lexicos: "+ str(grammar.LexicalErrosList)) 
-                print("Errores Sintacticos: "+ str(grammar.sintacticErroList)) 
                 self.msgBox = QtWidgets.QMessageBox()
                 self.msgBox.setText("this file contains lexical or syntactical errors.")
                 self.msgBox.exec()
-            
+
+                if len(grammar.LexicalErrosList) > 0:
+                    global lineasBefore, data, dataS
+                    print("Errores Lexicos: "+ str(grammar.LexicalErrosList))
+                    aux = lineasBefore
+
+                    if lineasBefore != lines and lineasBefore != 0:
+                        if lineasBefore < lines :
+                            for i in grammar.LexicalErrosList:
+                                i.line = i.line - (lines - lineasBefore)
+                        else:
+                            for i in grammar.LexicalErrosList:
+                                i.line = i.line + (lineasBefore - lines)
+
+                    can = grammar.LexicalErrosList[0].line / lines
+                    if can >= 1:
+                        lines = lines * can
+
+                    auxLine = lines
+                    result = grammar.LexicalErrosList
+                    data = [("LEXEMA", "COLUMNA", "LINEA")]
+                    for i in result:
+                        line = i.line
+                        if (i.line - (lines-1)) > 0:
+                            line = i.line-(lines-1)
+                        data.append((str(i.lexema), str(i.column), str(line)))
+                
+                if len(grammar.sintacticErroList) > 0:
+                    lines = auxLine
+                    #lines -= 1
+                    aux = lineasBefore
+                    if lineasBefore != lines and lineasBefore != 0:
+                        if lineasBefore < lines :
+                            for i in grammar.sintacticErroList:
+                                i.line = i.line - (lines - lineasBefore)
+                        else:
+                            for i in grammar.sintacticErroList:
+                                i.line = i.line + (lineasBefore - lines)
+                    can = 0
+                    can = (grammar.sintacticErroList[0].line) / lines
+                    if can >= 1:
+                        lines = lines * can
+
+                    auxLine = lines
+                    #print(str(grammar.sintacticErroList))
+                    result = grammar.sintacticErroList
+                    dataS = [("LEXEMA", "COLUMNA", "LINEA")]
+                    for i in result:                        
+                        line = i.line
+                        if ((i.line) - (lines-2)) > 0:
+                            line = (i.line)-(lines-2)
+                        dataS.append((str(i.lexema), str(i.column), str(line)))
+
+                                       
+                    lineasBefore = auxLine
+                
             else:
                 #not exist errors
                 printList = execute.execute(result)
@@ -253,8 +355,8 @@ class Ui_Augus(object):
 
             import os
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-            os.system('dot -Tpng ../reports/graph.dot -o ../reports/graph.png')
-            os.system('dot -Tpng ../reports/ast.dot -o ../reports/ast.png')
+            #os.system('dot -Tpng ../reports/graph.dot -o ../reports/graph.png')
+            #os.system('dot -Tpng ../reports/ast.dot -o ../reports/ast.png')
 
             sys.stdout.flush()
             

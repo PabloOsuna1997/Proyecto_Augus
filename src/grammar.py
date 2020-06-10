@@ -889,7 +889,6 @@ def p_f_char(t):
 
 def p_error(t):
     print("Error sintactico en '%s'" % t.value + "line: "+ str(t.lineno))
-
     global sintacticErroList
     so = sinOb(t.value, t.lineno, t.lexpos)
     sintacticErroList.append(so)
@@ -900,7 +899,7 @@ parser = yacc.yacc()
 
 def parse(input):
     global input_, fgraph, primeravez, treeList, contador, contadorSente, conNode, senteList, senteList_, corcheList, bandera
-    global corcheListaux, csList, sentenciaHija, res, fgraph
+    global corcheListaux, csList, sentenciaHija, res, fgraph, sintacticErroList, LexicalErrosList
     primeravez = 0
     treeList = [] #list for save nodes
     contador = 0
@@ -917,13 +916,18 @@ def parse(input):
     bandera = 0
     res = []
     fgraph = ''
+    sintacticErroList[:] = []
+    LexicalErrosList[:] =[]
 
     input_ = input
     fgraph = open('../reports/ast.dot','a') #creamos el archivo
     fgraph.write("\n") 
     #print(input_)
     instructions = parser.parse(input)
-    if len(LexicalErrosList) > 0:
-        instructions[:] = []
+    if len(LexicalErrosList) > 0 or len(sintacticErroList) > 0:
+        if instructions == None:
+            instructions = []
+        else:
+            instructions[:] = []
         return instructions
     return instructions
