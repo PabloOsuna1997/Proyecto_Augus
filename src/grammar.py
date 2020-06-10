@@ -144,21 +144,17 @@ def t_COMENTARIO(t):
 t_ignore = " \t"
 
 def t_newline(t):
-    r'\n+'
+    r'\n+' 
     t.lexer.lineno += t.value.count("\n")
 
 # method for obtention the column
 def find_column(input, token):
-    #print(input)
     line_start = input.rfind('\n', 0, token.lexpos) + 1
-    #print("inicio: " + str(line_start))
-    #print("columna: " + str(token.lexpos))
     return (token.lexpos - line_start) + 1
     
 def t_error(t):
     global input_,LexicalErrosList
-    print("Illegal character '%s'" % t.value[0])
-    #print(str(t.lexer.lineno))
+    print("Illegal character '%s'" % t.value[0]+", linea: "+str(t.lexer.lineno))
     lo = lexOb(t.value[0],find_column(input_,t),t.lexer.lineno)
     LexicalErrosList.append(lo)
     t.lexer.skip(1)
@@ -924,6 +920,7 @@ def parse(input):
     fgraph.write("\n") 
     #print(input_)
     instructions = parser.parse(input)
+    parser.restart()
     if len(LexicalErrosList) > 0 or len(sintacticErroList) > 0:
         if instructions == None:
             instructions = []

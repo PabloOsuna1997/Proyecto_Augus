@@ -251,7 +251,7 @@ class Ui_Augus(object):
             grammar.LexicalErrosList[:] = []
         
     def fn_Ejecutar_Ascendente(self):
-        #try:            
+        try:            
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
@@ -263,6 +263,7 @@ class Ui_Augus(object):
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             words = content.split('\n')
             lines = len(words)
+            auxLine = lines
 
             result = grammar.parse(content)
 
@@ -289,18 +290,16 @@ class Ui_Augus(object):
                     if can >= 1:
                         lines = lines * can
 
-                    auxLine = lines
                     result = grammar.LexicalErrosList
                     data = [("LEXEMA", "COLUMNA", "LINEA")]
                     for i in result:
                         line = i.line
                         if (i.line - (lines-1)) > 0:
-                            line = i.line-(lines-1)
+                            line = round(i.line-(lines-1))
                         data.append((str(i.lexema), str(i.column), str(line)))
                 
                 if len(grammar.sintacticErroList) > 0:
                     lines = auxLine
-                    #lines -= 1
                     aux = lineasBefore
                     if lineasBefore != lines and lineasBefore != 0:
                         if lineasBefore < lines :
@@ -310,22 +309,21 @@ class Ui_Augus(object):
                             for i in grammar.sintacticErroList:
                                 i.line = i.line + (lineasBefore - lines)
                     can = 0
-                    can = (grammar.sintacticErroList[0].line) / lines
+                    can = (grammar.sintacticErroList[0].line +1) / (lines)
                     if can >= 1:
-                        lines = lines * can
+                        lines = (lines) * can
 
-                    auxLine = lines
                     #print(str(grammar.sintacticErroList))
                     result = grammar.sintacticErroList
                     dataS = [("LEXEMA", "COLUMNA", "LINEA")]
                     for i in result:                        
                         line = i.line
                         if ((i.line) - (lines-2)) > 0:
-                            line = (i.line)-(lines-2)
+                            line = round((i.line)-(lines-2)+1)
                         dataS.append((str(i.lexema), str(i.column), str(line)))
 
-                                       
                     lineasBefore = auxLine
+                    lines = auxLine
                 
             else:
                 #not exist errors
@@ -360,10 +358,10 @@ class Ui_Augus(object):
 
             sys.stdout.flush()
             
-        #except:
-            #self.msgBox = QtWidgets.QMessageBox()
-            #self.msgBox.setText("Empty Area.")
-            #self.msgBox.exec()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Empty Area.")
+            self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
         try:
