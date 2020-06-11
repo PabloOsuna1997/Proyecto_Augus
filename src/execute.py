@@ -28,10 +28,12 @@ def execute(input):
     f.write("n000 -- n001;\n")
     f.write("n001 [label=\"Instrucciones\"] ;\n")
 
-    tsGlobal = []
+    tsGlobal = {}
+    tsGlobal.clear()
     tsGlobal = TS.SymbolTable()
     printList = []
-    semanticErrorList = []
+    printList[:] = []
+    semanticErrorList[:] = []
     process(input,tsGlobal, printList,f)
     f.close()
     print("Tabla de simbolos: ")
@@ -107,7 +109,12 @@ def process(instructions, ts, printList,f):
         elif isinstance(b, Exit):
             break
         elif isinstance(b, Unset):
-            print("unset")
+            if ts.delete(b.id) == 1:
+                print('variable eliminada.')
+            else:
+                se = seOb(f'Error Semantico: No se pudo eliminar {b.id}, en funcion unset.', b.line, b.column)
+                semanticErrorList.append(se)
+
         i += 1
 
 #---instructions 
@@ -142,7 +149,11 @@ def Print(instruction, ts, printList,f):
     f.write("n00"+str(contador)+" [label=\""+ str(var)+"\"] ;\n")
     contador += 1
     if var != '#':
-        printList.append(var)
+        if var != None:
+            printList.append(var)
+        else:
+            seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
+            semanticErrorList.append(seob)
     else:
         seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
         semanticErrorList.append(seob)
@@ -238,7 +249,25 @@ def valueArray(id, instruction, ts, valor):
     val = d
     i = 0
     #print(str(val))
+    auxaux = {**valor}
     while i < len(instruction.expressionIzq)-1:
+        valaux = auxaux.setdefault(valueExpression(instruction.expressionIzq[i], ts))
+        if valaux != None:
+            # verifico que no sea un entero
+            #l------
+            #-------
+            #-------
+            if isinstance(valaux, int) or isinstance(valaux, float):  #string caso especial de concatenacion
+                
+                se = seOb(f'Error: Posisicon ya esta ocupada.', instruction.line, instruction.column)
+                semanticErrorList.append(se)
+                return valor
+            elif isinstance(valaux, str):    #retorno el mismo valor
+                print("es string ");
+                return valor
+            #--------
+            #-------
+            #-------
         val = val.setdefault(valueExpression(instruction.expressionIzq[i], ts))
         i +=1
     #print(str(val))
@@ -278,7 +307,13 @@ def valueExpression(instruction, ts):
                     return (num1 + num2)
             if instruction.operator == Aritmetics.MENOS: return num1 - num2
             elif instruction.operator == Aritmetics.POR: return num1 * num2
-            elif instruction.operator == Aritmetics.DIV: return num1 / num2
+            elif instruction.operator == Aritmetics.DIV: 
+                if num2 != 0:
+                    return num1 / num2
+                else:
+                    seob = seOb('Error Semantico: Division entre 0.', la, co)
+                    semanticErrorList.append(seob)
+                    return '#'
             elif instruction.operator == Aritmetics.MODULO: return num1 % num2
         except:
             seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.', la, co)
@@ -369,22 +404,27 @@ def valueExpression(instruction, ts):
     elif isinstance(instruction, ExpressionsDeclarationArray): return 'array'
     elif instruction == 'array': return 'array'
     elif isinstance(instruction, IdentifierArray):
-        sym = ts.get(instruction.id).valor
-        d = ast.literal_eval(str(sym))
-        tmp = d
-        i = 0
-        while i < len(instruction.expressions)-1:
-            value = valueExpression(instruction.expressions[i], ts)
-            tmp = tmp.setdefault(value, ts)
-            if tmp == None:
-                se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
-                semanticErrorList.append(se)
-                return '#'
-            i += 1
+        try:
+            sym = ts.get(instruction.id).valor
+            d = ast.literal_eval(str(sym))
+            tmp = d
+            i = 0
+            while i < len(instruction.expressions)-1:
+                value = valueExpression(instruction.expressions[i], ts)
+                tmp = tmp.setdefault(value, ts)
+                if tmp == None:
+                    se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
+                    semanticErrorList.append(se)
+                    return '#'
+                i += 1
 
-        result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
-        #print("Resultado de la consulta: " + str(result))
-        return result
+            result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
+            #print("Resultado de la consulta: " + str(result))
+            return result
+        except:
+            se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
+            semanticErrorList.append(se)
+            return '#'
     elif isinstance(instruction, ReadConsole):
         #lectura de consola
         valor = input()

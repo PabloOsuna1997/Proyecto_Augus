@@ -293,6 +293,7 @@ class Ui_Augus(object):
             fgraph.close()
 
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            content += '\n'
             result = grammar.parse(content)
 
             # si exists errores lexicos o sintacticos traera una lista vacia            
@@ -319,9 +320,12 @@ class Ui_Augus(object):
                 print("\nConsole:")
                 self.textEditConsole.setText("")
                 self.textEditConsole.setPlainText("CONSOLE:\n")
-                for element in printList:                
-                    self.textEditConsole.append("> " + str(element) + "\n")
-                    print( "> " + str(element))
+                for element in printList:
+                    if element == "\\n" or element == '\\n':
+                        self.textEditConsole.append('\n')               
+                    else:
+                        self.textEditConsole.append("> " + str(element) + "\n")
+                        print( "> " + str(element))
                 
                 if len(execute.semanticErrorList) == 0:
 

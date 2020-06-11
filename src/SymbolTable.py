@@ -25,6 +25,7 @@ class SymbolTable() :
     'this class represent our symbol table'
     def __init__(self, symbols = {}):
         self.symbols = symbols
+        self.symbols.clear();
 
     def add(self, symbol):
         self.symbols[symbol.id] = symbol
@@ -53,7 +54,7 @@ class SymbolTable() :
 
     def delete(self, id):
         if id in self.symbols:
-            self.symbols.remove(id)
+            del self.symbols[id]
             return 1            
         print(f"{id} not defiened.")
         return 0

@@ -4,8 +4,10 @@ class Instruction:
 class Print_(Instruction) :
     '''print statment, recieve a string'''
     
-    def __init__(self, cadena):
+    def __init__(self, cadena, line, column):
          self.cadena = cadena
+         self.line = line
+         self.column = column
 
 class Declaration(Instruction):
     '''variables declarations'''
@@ -19,8 +21,10 @@ class Declaration(Instruction):
 class Unset(Instruction):
     '''variables destruction'''
 
-    def __init__(self, id):
+    def __init__(self, id, line, column):
         self.id = id
+        self.line = line
+        self.column = column
 
 class Exit(Instruction):
     def __init__(self, exit = 1):
@@ -28,9 +32,11 @@ class Exit(Instruction):
 
 class If(Instruction):
     '''if statment, recieve a label for jump'''
-    def __init__(self, expression, label):
+    def __init__(self, expression, label, line, column):
         self.label = label
         self.expression = expression
+        self.line = line
+        self.column = column
 
 class Goto(Instruction):
     '''label jump'''

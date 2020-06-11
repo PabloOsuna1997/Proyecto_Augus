@@ -3,9 +3,11 @@ main:
  $t1[0]['nombre']="Daniel";
  $t1[0]['direccion']="zona 4";
  $t1[0]['telefono'][0]=56457854;
- $t1[0]['telefono'][1]=48457585; $t1[1]['nombre']="Hugo";
+ $t1[0]['telefono'][1]=48457585; 
+ $t1[1]['nombre']="Hugo";
  $t1[1]['direccion']="zona 8";
- $t1[1]['telefono'][0]=24659865; $t1[2]['nombre']="Manuel";
+ $t1[1]['telefono'][0]=24659865; 
+ $t1[2]['nombre']="Manuel";
  $t1[2]['direccion']="zona 11";
  $t1[2]['telefono'][0]=47859685;
  $t1[2]['telefono'][1]=54659865;

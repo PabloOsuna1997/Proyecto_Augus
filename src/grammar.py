@@ -303,7 +303,7 @@ def p_sentencia_decla(t):
 def p_etiqueta(t):
     # i call label to recognize the label
     'ETIQUETA   : LABEL DOSPUNTOS' 
-    t[0] = Label(t[1], t.lineno(1), t.lexpos(1))
+    t[0] = Label(t[1], t.lineno(1), find_column(input_, t.slice[1]))
     #region draw graph
     global contador,conNode, senteList
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -320,9 +320,9 @@ def p_instrucciones(t):
                         | EXIT PUNTOCOMA
                         | GOTO LABEL PUNTOCOMA'''
 
-    global contador, conNode, fgraph, senteList
+    global contador, conNode, fgraph, senteList, input_
     if(t[1] == 'print'): 
-        t[0] = Print_(t[3])
+        t[0] = Print_(t[3], t.lineno(2), find_column(input_, t.slice[2]))
         #region graph
         fgraph.write("n00"+str(conNode+1)+" [label=\"print\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -340,7 +340,7 @@ def p_instrucciones(t):
         #endregion      
 
     elif(t[1] == 'if'): 
-        t[0] = If(t[3], t[6])
+        t[0] = If(t[3], t[6], t.lineno(2), find_column(input_, t.slice[2]))
         #region graph
         fgraph.write("n00"+str(conNode+1)+" [label=\"if\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -362,7 +362,7 @@ def p_instrucciones(t):
         #endregion
 
     elif(t[1] == 'unset'): 
-        t[0] = Unset(t[3])
+        t[0] = Unset(t[3], t.lineno(3), t.lexpos(3))
         #region graph
         fgraph.write("n00"+str(conNode+1)+" [label=\"unset\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
@@ -463,7 +463,7 @@ def p_array(t):
     #endregion
      
     if(t[1] == '='): t[0] = t[2]  #if expresion is array, expression contain 'array'
-    else: t[0] = ExpressionsDeclarationArray(t[1], t[3], t.lineno(1), t.lexpos(1))
+    else: t[0] = ExpressionsDeclarationArray(t[1], t[3], t.lineno(2), find_column(input_, t.slice[2]))
 
 def p_corchete_lista(t):
     'CORCHETES : CORCHETES CORCHETE'
@@ -591,10 +591,6 @@ def p_operacion(t):
     #endregion
     #print(str(t[1]) +", "+str(t[2]))
     if(t[2] == '+'):
-        print(f'linea: {t.lineno(0)}')
-        print(f'linea: {t.lineno(1)}')
-        print(f'linea: {t.lineno(2)}')
-        print(f'linea: {t.lineno(3)}')
         t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2))        
     elif(t[2] == '-'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS, t.lineno(2), t.lexpos(2))
     elif(t[2] == '*'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR, t.lineno(2), t.lexpos(2))
