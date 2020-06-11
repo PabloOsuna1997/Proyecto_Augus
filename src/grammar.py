@@ -816,7 +816,7 @@ def p_f_id(t):
 
 def p_f_idARRAY(t):
     'F  : ID CORCHETES'
-    t[0] = IdentifierArray(t[1],t[2],t.lineno(1), t.lexpos(1))
+    t[0] = IdentifierArray(t[1],t[2],t.lineno(1), find_column(input_, t.slice[1]))
     #region
     global contador, conNode, fgraph,corcheList
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")

@@ -11,12 +11,13 @@ contador = 4  #for grapho
 currentAmbit = 'main'   #current ambit
 currentParams = []  #list of parameters that the current function will have
 semanticErrorList = []
+tsGlobal = {}
 la = 0
 co = 0
 
 def execute(input):
     #print(input)
-    global semanticErrorList, currentAmbit, currentParams, contador
+    global semanticErrorList, currentAmbit, currentParams, contador, tsGlobal
     contador = 4  #for grapho   
     currentAmbit = 'main'   #current ambit
     currentParams[:] = []  #list of parameters that the current function will have
@@ -29,7 +30,6 @@ def execute(input):
     f.write("n001 [label=\"Instrucciones\"] ;\n")
 
     tsGlobal = {}
-    tsGlobal.clear()
     tsGlobal = TS.SymbolTable()
     printList = []
     printList[:] = []
@@ -120,23 +120,17 @@ def process(instructions, ts, printList,f):
 #---instructions 
 pasadas = 0
 def goto(i, instructions, label):
-    #print("instruccion No: "+str(i))
-    #print("etiqueta buscada: "+str(label))
     global pasadas
     c = i
     while c < len(instructions):
         d = instructions[c]
-        #print(str(d))
         if isinstance(d,Label):
             if d.label == label:
-                #print("lo encontre retornando: "+ str(c-1))
                 return c-1
         c += 1
     #semantic error, this label dont exist
     pasadas += 1
-    #print("pasadas: "+str(pasadas))
     if pasadas == 2:
-        #ya dio 2 pasadas completas
         return 0
     i = goto(0, instructions, label)
     return i

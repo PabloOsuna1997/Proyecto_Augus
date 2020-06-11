@@ -6,11 +6,13 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+from PIL import Image
 import grammar
 import reportGenerator as rg
 import reportSemantic as sg
+import reportTS as tg
 import execute
-import sys
+import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
 #from PyQt5.QtGui import QColor
@@ -19,6 +21,7 @@ contadorVentanas = 0
 data = []
 dataS = []
 dataSema = []
+dataTs = []
 class Ui_Augus(object):
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
@@ -60,6 +63,8 @@ class Ui_Augus(object):
         self.actionReporteSintactico.setObjectName("actionReporteSintactico")
         self.actionReporteSemantico = QtWidgets.QAction(Augus)
         self.actionReporteSemantico.setObjectName("actionReporteSemantico")
+        self.actionReporteAST = QtWidgets.QAction(Augus)
+        self.actionReporteAST.setObjectName("actionReporteAST")
         self.actionReporteTS = QtWidgets.QAction(Augus)
         self.actionReporteTS.setObjectName("actionReporteTS")
         self.actionAbrir = QtWidgets.QAction(Augus)
@@ -92,6 +97,7 @@ class Ui_Augus(object):
         self.menuReportes.addAction(self.actionReporteLexico)
         self.menuReportes.addAction(self.actionReporteSintactico)
         self.menuReportes.addAction(self.actionReporteSemantico)
+        self.menuReportes.addAction(self.actionReporteAST)
         self.menuReportes.addAction(self.actionReporteTS)
         self.menuArchivo.addAction(self.actionAbrir)
         self.menuArchivo.addAction(self.actionGuardar)
@@ -130,7 +136,8 @@ class Ui_Augus(object):
         self.actionReporteLexico.triggered.connect(lambda : self.fn_repLexico())
         self.actionReporteSintactico.triggered.connect(lambda : self.fn_repSintactico())
         self.actionReporteSemantico.triggered.connect(lambda : self.fn_repSemantico())
-        self.actionReporteSemantico.triggered.connect(lambda : self.fn_repTS())
+        self.actionReporteAST.triggered.connect(lambda : self.fn_repAST())
+        self.actionReporteTS.triggered.connect(lambda : self.fn_repTS())
 
 
         self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
@@ -153,6 +160,7 @@ class Ui_Augus(object):
         self.actionReporteSintactico.setText(_translate("Augus", "Reporte Sintactico"))
         self.actionReporteSemantico.setText(_translate("Augus", "Reporte Semantico"))
         self.actionReporteTS.setText(_translate("Augus", "Reporte Tabla de Simbolos"))
+        self.actionReporteAST.setText(_translate("Augus", "Reporte AST"))
         self.actionAbrir.setText(_translate("Augus", "Abrir"))
         self.actionGuardar.setText(_translate("Augus", "Guardar"))
         self.actionGuardar_Como.setText(_translate("Augus", "Guardar Como"))
@@ -217,16 +225,61 @@ class Ui_Augus(object):
         except:
             print("closing file dialog.")
 
+    def fn_repAST(self):
+        try:
+            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+            os.system('dot -Tpng ../reports/ast.dot -o ../reports/ast.png')
+
+            ruta = ("../reports/ast.png")
+            im = Image.open(ruta)
+            im.show()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Error al crear reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.exec()
+
     def fn_repTS(self):
         print("reporte de tabla de simbolos")
+        try:
+            fgraph = open('../reports/tsReport.dot','w+') #creamos el archivo
+            fgraph.write("digraph H { parent [ shape=plaintext label=< <table border=\'1\' cellborder=\'1\'>")                    
+            fgraph.write("<tr><td colspan=\"3\">REPORTE DE TABLA DE SIMBOLOS</td></tr>")
+            fgraph.write("<tr><td port=\'port_one\'>ID</td><td port=\'port_two\'>TIPO</td><td port=\'port_three\'>VALOR</td><td port=\'port_four\'>DECLARADA EN</td><td port=\'port_five\'>DIMENSION</td><td port=\'port_six\'>REFERENCIA</td></tr>")
+            
+            for key, val in execute.tsGlobal.symbols.items():
+                fgraph.write(f"<tr><td port=\'port_one\'>{str(key)}</td><td port=\'port_two\'>{str(val.tipo)}</td><td port=\'port_three\'>{str(val.valor)}</td><td port=\'port_four\'>{str(val.declarada)}</td><td port=\'port_five\'>{str(val.dimension)}</td><td port=\'port_six\'>{str(val.referencia)}</td></tr>")
+                        
+            fgraph.write("</table> >]; }")
+            fgraph.close()
+
+            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+            os.system('dot -Tpng ../reports/tsReport.dot -o ../reports/tsReport.png')    
+
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Reporte creado.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            self.msgBox.exec()
+
+            ruta = ("../reports/tsReport.png")
+            im = Image.open(ruta)
+            im.show()
+
+            execute.tsGlobal = {}
+        except:
+            print("error")
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Error al crear el reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.exec()
 
     def fn_repSemantico(self):
         print("reportando semantico")
         global dataSema
         try:
-            sg.export_to_pdf(dataSema,3)
+            sg.export_to_pdf(dataTs,3)
             dataSema[:] = []
-            execute.semanticErrorList[:] = []           
+            execute.semanticErrorList[:] = []         
 
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Despelgando reporte.")
@@ -237,7 +290,7 @@ class Ui_Augus(object):
         except:
             print("error")
             self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Porfavor cierre el reporte semantico.")
+            self.msgBox.setText("Porfavor cierre el reporte de errores semanticos.")
             self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
             self.msgBox.exec()
 
@@ -297,7 +350,7 @@ class Ui_Augus(object):
             result = grammar.parse(content)
 
             # si exists errores lexicos o sintacticos traera una lista vacia            
-            global data, dataS, dataSema
+            global data, dataS, dataSema, dataTs
             if len(result) == 0:
                 self.msgBox = QtWidgets.QMessageBox()
                 self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
@@ -328,7 +381,7 @@ class Ui_Augus(object):
                         print( "> " + str(element))
                 
                 if len(execute.semanticErrorList) == 0:
-
+                    
                     self.msgBox = QtWidgets.QMessageBox()
                     self.msgBox.setText("Analisis correcto.")
                     self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
@@ -354,12 +407,7 @@ class Ui_Augus(object):
             fgraph.write("}")
             fgraph.flush()
             fgraph.close()
-
-            import os
-            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-            #os.system('dot -Tpng ../reports/graph.dot -o ../reports/graph.png')
-            #os.system('dot -Tpng ../reports/ast.dot -o ../reports/ast.png')
-
+          
             sys.stdout.flush()
             
         #except:
