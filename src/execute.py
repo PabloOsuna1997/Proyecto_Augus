@@ -11,6 +11,8 @@ contador = 4  #for grapho
 currentAmbit = 'main'   #current ambit
 currentParams = []  #list of parameters that the current function will have
 semanticErrorList = []
+la = 0
+co = 0
 
 def execute(input):
     #print(input)
@@ -54,7 +56,7 @@ def process(instructions, ts, printList,f):
             Declaration_(b, ts,f)
         elif isinstance(b, If):
             result = valueExpression(b.expression, ts)
-            if result >= 1:
+            if result == 1:
                 tmp = i
                 i = goto(i+1, instructions, b.label)
                 if i != 0:
@@ -63,10 +65,11 @@ def process(instructions, ts, printList,f):
                 else:
                     i = tmp
                     #print("error semantico, etiqueta no existe")
-                    se = seOb(f"Error: etiqueta {b.label} no existe")
+                    se = seOb(f"Error: etiqueta {b.label} no existe", b.line, b.column)
                     semanticErrorList.append(se)
-            #else:
-                #print("false")
+            elif result == '#':
+                se = seOb(f"Error: Condicion no valida", b.line, b.column)
+                semanticErrorList.append(se)
         elif isinstance(b, Goto):
             #seteamos la instruccion anterior como la llamada al goto
             tmp = i
@@ -77,7 +80,7 @@ def process(instructions, ts, printList,f):
             else:
                 i = tmp
                 #print("error semantico, etiqueta no existe")
-                se = seOb(f"Error: etiqueta {b.label} no existe")
+                se = seOb(f"Error: etiqueta {b.label} no existe", b.line, b.column)
                 semanticErrorList.append(se)
         elif isinstance(b, Label):
             #insert to symbols table
@@ -103,6 +106,8 @@ def process(instructions, ts, printList,f):
             currentAmbit = b.label
         elif isinstance(b, Exit):
             break
+        elif isinstance(b, Unset):
+            print("unset")
         i += 1
 
 #---instructions 
@@ -132,14 +137,27 @@ def goto(i, instructions, label):
 def Print(instruction, ts, printList,f):
     #add to .dot
     global contador
+    var = valueString(instruction.cadena, ts)
     f.write("n002 -- n00"+str(contador)+";\n")
-    f.write("n00"+str(contador)+" [label=\""+ str(valueString(instruction.cadena, ts))+"\"] ;\n")
+    f.write("n00"+str(contador)+" [label=\""+ str(var)+"\"] ;\n")
     contador += 1
-    printList.append(valueString(instruction.cadena, ts))
+    if var != '#':
+        printList.append(var)
+    else:
+        seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
+        semanticErrorList.append(seob)
 
 def Declaration_(instruction, ts,f): 
     #print(str(instruction))
+    global la, co
+    la = instruction.line
+    co = instruction.column
+
     val = valueExpression(instruction.val, ts)
+    if val == '#':
+        seob = seOb(f'Error Semantico: No se pudo declarar {instruction.id}.', instruction.line, instruction.column)
+        semanticErrorList.append(seob)
+        return
     if val != 'array':
         type_ = getType(val)
         sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
@@ -239,8 +257,8 @@ def update(d1, d2):
                 d1[key] = d2[key]
         return d1
     except:
-        seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.')
-        semanticErrorList.append(seob)
+        #seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.', )
+        #semanticErrorList.append(seob)
         return {}
 
 def getArray(sym, instruccion, ts):
@@ -248,21 +266,24 @@ def getArray(sym, instruccion, ts):
 
 def valueExpression(instruction, ts):
     if isinstance(instruction, BinaryExpression):
+        
+        global la, co
         num1 = valueExpression(instruction.op1, ts)
         num2 = valueExpression(instruction.op2, ts)
-        #if isinstance(num1, str):
-            #if isinstance(num2, str):
-                #print("Error: types.")
         try:
-            if instruction.operator == Aritmetics.MAS: return num1 + num2
+            if instruction.operator == Aritmetics.MAS: 
+                if isinstance((num1 + num2), str):
+                    return str(num1 + num2)
+                else:
+                    return (num1 + num2)
             if instruction.operator == Aritmetics.MENOS: return num1 - num2
             elif instruction.operator == Aritmetics.POR: return num1 * num2
             elif instruction.operator == Aritmetics.DIV: return num1 / num2
             elif instruction.operator == Aritmetics.MODULO: return num1 % num2
         except:
-            seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.')
+            seob = seOb('Error Semantico: Tipos de datos en operacion aritmetica.', la, co)
             semanticErrorList.append(seob)
-            return 0
+            return '#'
     elif isinstance(instruction, LogicAndRelational):
         val1 = valueExpression(instruction.op1, ts)
         val2 = valueExpression(instruction.op2, ts)
@@ -278,59 +299,55 @@ def valueExpression(instruction, ts):
             elif instruction.operator == LogicsRelational.IGUALQUE: 
                 if val1 == val2: return 1
             elif instruction.operator == LogicsRelational.AND: 
-                if val1 >= 1 and val2 >= 1: return 1
+                if val1 == 1 and val2 == 1: return 1
             elif instruction.operator == LogicsRelational.OR: 
-                if val1 >= 1 or val2 >= 1: return 1
+                if val1 == 1 or val2 == 1: return 1
             elif instruction.operator == LogicsRelational.XOR: 
-                if val1 >= 1 ^ val2 >= 1: return 1
+                if val1 == 1 ^ val2 == 1: return 1
             elif instruction.operator == LogicsRelational.DIFERENTE:
                 if val1 != val2: return 1
         
             return 0
         except:
-            se = seOb('Error : Tipos de datos en operacion relacional.')
+            se = seOb('Error : Tipos de datos en operacion relacional.', instruction.line, instruction.column)
             semanticErrorList.append(se)
-            return 0
+            return '#'
     elif isinstance(instruction, Not):
         try:
             num1 = valueExpression(instruction.expression, ts)
             if num1 >= 1: return 0
             else: return 1
         except:
-            se = seOb(f'Error: Tipos de datos en la operacion Not {valueExpression(instruction.expression,ts)}.')
+            se = seOb(f'Error: Tipos de datos en la operacion Not {valueExpression(instruction.expression,ts)}.', instruction.line, instruction.column)
             semanticErrorList.append(se)
-            return 0
+            return '#'
     elif isinstance(instruction, Abs):
         try:
             return abs(valueExpression(instruction.expression,ts))
         except:
-            se = seOb(f'Error: Tipos de datos en la operacion Abs {valueExpression(instruction.expression,ts)}.')
+            se = seOb(f'Error: Tipos de datos en la operacion Abs {valueExpression(instruction.expression,ts)}.', instruction.line, instruction.column)
             semanticErrorList.append(se)
-            return 0
+            return '#'
     elif isinstance(instruction, NegativeNumber):
         try:
             num1 = valueExpression(instruction.expression, ts)
             if isinstance(num1, int) or isinstance(num1, float):
                 return -1 * num1
             else:
-                se = seOb(f'Error: No se puede aplicar negativo a {num1}.')
+                se = seOb(f'Error: No se puede aplicar negativo a {num1}.', instruction.line, instruction.column)
                 semanticErrorList.append(se)
-                return 0
+                return '#'
         except:
-            se = seOb(f'Error: No se puede aplicar negativo a {num1}.')
+            se = seOb(f'Error: No se puede aplicar negativo a {num1}.', instruction.line, instruction.column)
             semanticErrorList.append(se)
-            return 0
+            return '#'
     elif isinstance(instruction, Identifier):
         if ts.exist(instruction.id) == 1:
-            if ts.get(instruction.id).tipo != TS.TypeData.INT and ts.get(instruction.id).tipo != TS.TypeData.FLOAT:
-                se = seOb(f'Error: No se puede aplicar negativo a {instruction.id} porque es no es un datro numerico.')
-                semanticErrorList.append(se)
-                return 0
-            else: return ts.get(instruction.id).valor
+            return ts.get(instruction.id).valor
         else:
-            se = seOb(f'Error Semantico: Variable  {instruction.id} no existe.')
+            se = seOb(f'Error Semantico: Variable  {instruction.id} no existe.', instruction.line, instruction.column)
             semanticErrorList.append(se)
-            return 0
+            return '#'
     elif isinstance(instruction, Number):
         return instruction.val
     elif isinstance(instruction, Cast_):
@@ -360,9 +377,9 @@ def valueExpression(instruction, ts):
             value = valueExpression(instruction.expressions[i], ts)
             tmp = tmp.setdefault(value, ts)
             if tmp == None:
-                se = seOb(f'Error: Indice {value} del arreglo no existe.')
+                se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
                 semanticErrorList.append(se)
-                return 0
+                return '#'
             i += 1
 
         result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
@@ -372,3 +389,32 @@ def valueExpression(instruction, ts):
         #lectura de consola
         valor = input()
         return valor
+    elif isinstance(instruction, RelationalBit):
+        val1 = valueExpression(instruction.op1, ts)
+        val2 = valueExpression(instruction.op2, ts)
+        
+        try:
+            if instruction.operator == BitToBit.ANDBIT: 
+                return (val1 & val2)
+            elif instruction.operator == BitToBit.ORBIT: 
+                return (val1 | val2)
+            elif instruction.operator == BitToBit.XORBIT: 
+                return (val1 ^ val2)
+            elif instruction.operator == BitToBit.SHIFTI: 
+                return (val1 << val2)
+            elif instruction.operator == BitToBit.SHIFTD: 
+                return (val1 >> val2)
+        
+            return 0
+        except:
+            se = seOb('Error : Tipos de datos en operacion bit a bit.', instruction.line, instruction.column)
+            semanticErrorList.append(se)
+            return '#'
+    elif isinstance(instruction, NotBit):
+        num1 = valueExpression(instruction.expression, ts)
+        if isinstance(num1, int) or isinstance(num1, float):
+            return  ~num1
+        else:
+            se = seOb(f'Error: No se puede aplicar not bit  a {num1}.', instruction.line, instruction.column)
+            semanticErrorList.append(se)
+            return '#'

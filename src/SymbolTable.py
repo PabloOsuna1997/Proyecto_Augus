@@ -50,3 +50,10 @@ class SymbolTable() :
             print("Error: function "+ id + " not defiened." )
         else:
             self.symbols[id].tipo = type_
+
+    def delete(self, id):
+        if id in self.symbols:
+            self.symbols.remove(id)
+            return 1            
+        print(f"{id} not defiened.")
+        return 0

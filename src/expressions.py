@@ -30,53 +30,71 @@ class NumericExpression:
     ''' this class represent an numeric expresion'''
 
 class BinaryExpression(NumericExpression):
-        def __init__(self, op1, op2, operator):
+        def __init__(self, op1, op2, operator, line, column):
             self.op1 = op1
             self.op2 = op2
-            self.operator = operator
+            self.operator = operator            
+            self.line = line
+            self.column = column
 
 class Number(NumericExpression):
-        def __init__(self, val=0):
+        def __init__(self, line, column, val=0):
             self.val = val
+            self.line = line
+            self.column = column
         
 class Identifier(NumericExpression):
-        def __init__(self, id = ""):
+        def __init__(self, id, line, column):
             self.id = id
+            self.line = line
+            self.column = column
 
 class NegativeNumber(NumericExpression):
-        def __init__(self, expression):
+        def __init__(self, expression, line, column):
             self.expression = expression
+            self.line = line
+            self.column = column
 
 class Abs(NumericExpression):
-    def __init__(self, expression):
+    def __init__(self, expression, line, column):
         self.expression = expression
+        self.line = line
+        self.column = column
 
 class IdentifierArray(NumericExpression):
-    def __init__(self, id, expressions):
+    def __init__(self, id, expressions, line, column):
         self.id = id
         self.expressions = expressions
+        self.line = line
+        self.column = column
 
 ######----------------Strings section
 class StringExpression:
     '''this class represent an string expression'''
 
 class String_(StringExpression):
-    def __init__(self, string):
+    def __init__(self, string, line, column):
         self.string = string
+        self.line = line
+        self.column = column
 
 ######---------------- Logical Section
 class LogicalExpression:
     '''this class represent an logical expresions'''
 
 class LogicAndRelational(LogicalExpression):
-    def __init__(self, op1, op2, operator):
+    def __init__(self, op1, op2, operator, line , column):
         self.op1 = op1
         self.op2 = op2
         self.operator = operator
+        self.line = line
+        self.column = column
 
 class Not(LogicalExpression):
-    def __init__(self, expression):
+    def __init__(self, expression, line, column):
         self.expression = expression
+        self.line = line
+        self.column = column
 
 
 
@@ -85,14 +103,18 @@ class BitBit:
     '''this class represent an bit to bit expressions'''
 
 class NotBit(BitBit):
-    def __init__(self, expression):
+    def __init__(self, expression, line, column):
         self.expression = expression
+        self.line = line
+        self.column = column
 
 class RelationalBit(BitBit):
-    def __init__(self, op1, op2, operator):
+    def __init__(self, op1, op2, operator, line, column):
         self.op1 = op1
         self.op2 = op2
         self.operator = operator
+        self.line = line
+        self.column = column
 
 
 ###----------------------cast section
@@ -100,9 +122,11 @@ class Cast:
     'this class represent the diferents types of the cast'
 
 class Cast_(Cast):
-    def __init__(self, expression, type):
+    def __init__(self, expression, type, line, column):
         self.expression = expression
         self.type = type
+        self.line = line
+        self.column = column
 
 
 ###------------------------read setcion
@@ -110,8 +134,10 @@ class Read:
     'this class represent the read to console'
 
 class ReadConsole(Read):
-    def __init__(self, read = 1):
+    def __init__(self, line, column, read = 1):
         self.read = read
+        self.line = line
+        self.column = column
 
 
 ###-------------------------array section
@@ -119,6 +145,8 @@ class Array:
     'this class represent arrays'
 
 class ExpressionsDeclarationArray(Array):
-    def __init__(self, expressionIzq, expressionDer):
+    def __init__(self, expressionIzq, expressionDer, line, column):
         self.expressionIzq = expressionIzq
         self.expressionDer = expressionDer
+        self.line = line
+        self.column = column

@@ -8,9 +8,16 @@ def grouper(iterable, n):
     return itertools.zip_longest(*args)
     
 def export_to_pdf(data, type_):
-    
-    type_ ="ERRORES SEMANTICOS:"
-    path = '../reports/semanticReport.pdf'
+    path = ''
+    if type_ == 1:
+        type_ = "ERRORES LEXICOS:"
+        path = '../reports/lexicalReport.pdf'
+    elif type_ == 2:
+        type_ = "ERRORES SINTACTICOS:"
+        path = '../reports/sintacticReport.pdf'
+    else:
+        type_ ="ERRORES SEMANTICOS:"
+        path = '../reports/semanticReport.pdf'
 
     c = canvas.Canvas(f"{path}", pagesize=A4)
     c.drawImage('../resources/logo.jpg', 25, 750, 50, 50)
@@ -21,14 +28,14 @@ def export_to_pdf(data, type_):
     w, h = A4
     max_rows_per_page = 45
     # Margin.
-    x_offset = 75
+    x_offset = 10
     y_offset = 115
     # Space between rows.
     padding = 15
                 
-    xlist = [x + x_offset for x in [100, 400, 410]]
+    xlist = [x + x_offset for x in [100, 400, 475, 550]]
     ylist = [h - y_offset - i*padding for i in range(max_rows_per_page + 1)]
-
+                
     for rows in grouper(data, max_rows_per_page):
         rows = tuple(filter(bool, rows))
         c.grid(xlist, ylist[:len(rows) + 1])

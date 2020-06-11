@@ -3,5 +3,7 @@ class SemanticObject():
 
 class seOb(SemanticObject):
 
-        def __init__(self, description):
+        def __init__(self, description, line, column):
             self.description = description
+            self.line = line
+            self.column = column

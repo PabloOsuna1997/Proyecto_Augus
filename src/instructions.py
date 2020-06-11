@@ -10,9 +10,11 @@ class Print_(Instruction) :
 class Declaration(Instruction):
     '''variables declarations'''
 
-    def __init__(self, id, val = 0):
+    def __init__(self, id, line, column, val = 0):
         self.id = id
         self.val = val
+        self.line = line
+        self.column = column
 
 class Unset(Instruction):
     '''variables destruction'''
@@ -38,6 +40,8 @@ class Goto(Instruction):
 
 class Label(Instruction):
     'destination label '
-    def __init__(self, label):
+    def __init__(self, label, line, column):
         self.label = label
+        self.line = line
+        self.column = column
 

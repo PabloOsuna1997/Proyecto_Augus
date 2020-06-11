@@ -8,7 +8,7 @@
 
 import grammar
 import reportGenerator as rg
-import reportSemantic 
+import reportSemantic as sg
 import execute
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFil
 contadorVentanas = 0
 data = []
 dataS = []
+dataSema = []
 class Ui_Augus(object):
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
@@ -220,20 +221,24 @@ class Ui_Augus(object):
         print("reporte de tabla de simbolos")
 
     def fn_repSemantico(self):
+        print("reportando semantico")
+        global dataSema
         try:
-            print("reportando semantico")
-            print("errores : "+str(execute.semanticErrorList))
-            dataSe = [("DESCRIPCION", " ")]
-            for i in execute.semanticErrorList:
-                print(str(i.description))
-                dataSe.append((str(i.description), ' '))
+            sg.export_to_pdf(dataSema,3)
+            dataSema[:] = []
+            execute.semanticErrorList[:] = []           
 
-            reportSemantic.export_to_pdf(dataSe,3)
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Despelgando reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            self.msgBox.exec()
             import os
             os.startfile('..\\reports\\semanticReport.pdf')
         except:
+            print("error")
             self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Porfavor cierre el reporte de errores semanticos.")
+            self.msgBox.setText("Porfavor cierre el reporte semantico.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
             self.msgBox.exec()
 
     def fn_repSintactico(self):
@@ -246,13 +251,15 @@ class Ui_Augus(object):
 
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Despelgando reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
             self.msgBox.exec()
             import os
             os.startfile('..\\reports\\sintacticReport.pdf')
         except:
             print("error")
             self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("please close report sintactic.")
+            self.msgBox.setText("Porfavor cierre el reporte sintactico.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
             self.msgBox.exec()
     
     def fn_repLexico(self):
@@ -265,12 +272,14 @@ class Ui_Augus(object):
 
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Despelgando reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
             self.msgBox.exec()
             import os
             os.startfile('..\\reports\\lexicalReport.pdf')
         except:
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("please close report lexical.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
             self.msgBox.exec()
         
     def fn_Ejecutar_Ascendente(self):
@@ -286,11 +295,12 @@ class Ui_Augus(object):
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             result = grammar.parse(content)
 
-            # si exists errores lexicos o sintacticos traera una lista vacia
+            # si exists errores lexicos o sintacticos traera una lista vacia            
+            global data, dataS, dataSema
             if len(result) == 0:
-                global data, dataS
                 self.msgBox = QtWidgets.QMessageBox()
                 self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
+                self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
                 self.msgBox.exec()
 
                 if len(grammar.LexicalErrosList) > 0:                    
@@ -313,15 +323,21 @@ class Ui_Augus(object):
                     self.textEditConsole.append("> " + str(element) + "\n")
                     print( "> " + str(element))
                 
-                if len(execute.semanticErrorList) < 0:
+                if len(execute.semanticErrorList) == 0:
 
                     self.msgBox = QtWidgets.QMessageBox()
-                    self.msgBox.setText("Correct Analysis.")
+                    self.msgBox.setText("Analisis correcto.")
+                    self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     self.msgBox.exec()
                 
-                else:
+                else:                   
+                    dataSema = [("DESCRIPCION", "COLUMNA", "LINEA")]
+                    for i in execute.semanticErrorList:
+                        dataSema.append((str(i.description), str(i.column), str(i.line)))
+                    
                     self.msgBox = QtWidgets.QMessageBox()
-                    self.msgBox.setText("Exist semacntics errors.")
+                    self.msgBox.setText("Existen errores semanticos.")
+                    self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     self.msgBox.exec()
 
             #creat to report
@@ -344,7 +360,8 @@ class Ui_Augus(object):
             
         #except:
             #self.msgBox = QtWidgets.QMessageBox()
-            #self.msgBox.setText("Empty Area.")
+            #self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            #self.msgBox.setText("Area Vacia.")
             #self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):

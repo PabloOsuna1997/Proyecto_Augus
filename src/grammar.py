@@ -303,7 +303,7 @@ def p_sentencia_decla(t):
 def p_etiqueta(t):
     # i call label to recognize the label
     'ETIQUETA   : LABEL DOSPUNTOS' 
-    t[0] = Label(t[1])
+    t[0] = Label(t[1], t.lineno(1), t.lexpos(1))
     #region draw graph
     global contador,conNode, senteList
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -407,7 +407,7 @@ def p_instrucciones(t):
 def p_declaraciones(t):
     'DECLARACIONES  : ID ARRAY_'   
     #insertion a new variable
-    t[0] = Declaration(t[1], t[2])
+    t[0] = Declaration(t[1], t.lineno(1), t.lexpos(1),t[2])
     #region
     global contador, conNode, fgraph, senteList, corcheList
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -463,7 +463,7 @@ def p_array(t):
     #endregion
      
     if(t[1] == '='): t[0] = t[2]  #if expresion is array, expression contain 'array'
-    else: t[0] = ExpressionsDeclarationArray(t[1], t[3])
+    else: t[0] = ExpressionsDeclarationArray(t[1], t[3], t.lineno(1), t.lexpos(1))
 
 def p_corchete_lista(t):
     'CORCHETES : CORCHETES CORCHETE'
@@ -590,14 +590,19 @@ def p_operacion(t):
         conNode += 3
     #endregion
     #print(str(t[1]) +", "+str(t[2]))
-    if(t[2] == '+'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS)        
-    elif(t[2] == '-'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS)
-    elif(t[2] == '*'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR)
-    elif(t[2] == '/'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.DIV)
-    elif(t[2] == '%'): t[0] = BinaryExpression(t[1],t[3], Aritmetics.MODULO)
+    if(t[2] == '+'):
+        print(f'linea: {t.lineno(0)}')
+        print(f'linea: {t.lineno(1)}')
+        print(f'linea: {t.lineno(2)}')
+        print(f'linea: {t.lineno(3)}')
+        t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2))        
+    elif(t[2] == '-'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '*'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '/'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.DIV, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '%'): t[0] = BinaryExpression(t[1],t[3], Aritmetics.MODULO, t.lineno(2), t.lexpos(2))
     #unitaries
     elif(t[1] == '-'): 
-        t[0] = NegativeNumber(t[2])
+        t[0] = NegativeNumber(t[2], t.lineno(2), t.lexpos(2))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #-
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -610,7 +615,7 @@ def p_operacion(t):
         #endregion
 
     elif(t[1] == '!'): 
-        t[0] = Not(t[2])
+        t[0] = Not(t[2], t.lineno(2), t.lexpos(2))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #!
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -623,7 +628,7 @@ def p_operacion(t):
         #endregion
 
     elif(t[1] == '~'): 
-        t[0] = NotBit(t[2])
+        t[0] = NotBit(t[2], t.lineno(1), t.lexpos(1))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #~
         fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -636,21 +641,21 @@ def p_operacion(t):
         #endregion
 
     #relational and logical
-    elif(t[2] == '&&'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.AND)
-    elif(t[2] == '||'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.OR)
-    elif(t[2] == 'xor'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.XOR)
-    elif(t[2] == '=='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.IGUALQUE)
-    elif(t[2] == '!='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.DIFERENTE)
-    elif(t[2] == '>='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL)
-    elif(t[2] == '<='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL)
-    elif(t[2] == '>'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE)
-    elif(t[2] == '<'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE)
+    elif(t[2] == '&&'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.AND, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '||'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.OR, t.lineno(2), t.lexpos(2))
+    elif(t[2] == 'xor'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.XOR, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '=='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.IGUALQUE, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '!='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.DIFERENTE, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '>='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '<='): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '>'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '<'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE, t.lineno(2), t.lexpos(2))
     #bit to bit
     elif(t[2] == '&'): 
-        t[0] = RelationalBit(t[1],t[3], BitToBit.ANDBIT)
+        t[0] = RelationalBit(t[1],t[3], BitToBit.ANDBIT, t.lineno(1), t.lexpos(1))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #&
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
+        fgraph.write("n00"+str(conNode+1)+" [label=\""+str(t[1])+"\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+";\n")   #f
         fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
         fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
@@ -659,10 +664,10 @@ def p_operacion(t):
         conNode += 2
         #endregion
 
-    elif(t[2] == '|'): t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT)
-    elif(t[2] == '^'): t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT)
-    elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI)
-    elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD)
+    elif(t[2] == '|'): t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT, t.lineno(1), t.lexpos(1))
+    elif(t[2] == '^'): t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT, t.lineno(1), t.lexpos(1))
+    elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI, t.lineno(1), t.lexpos(1))
+    elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD, t.lineno(1), t.lexpos(1))
 
 def p_numero(t):
     'ATOMICO     : F'
@@ -685,7 +690,7 @@ def p_funcion(t):
     
     global contador, conNode, fgraph
     if(t[1] == 'abs'):      
-        t[0] = Abs(t[3])
+        t[0] = Abs(t[3], t.lineno(3), t.lexpos(3))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #abs
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
@@ -704,7 +709,7 @@ def p_funcion(t):
         #endregion
 
     elif(t[1] == 'read'):   
-        t[0] = ReadConsole()
+        t[0] = ReadConsole(t.lineno(1), t.lexpos(1))
         #region
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n") #read
         fgraph.write("n00"+str(conNode+2)+" [label=\""+ str(t[2])+"\"] ;\n") #(
@@ -717,7 +722,7 @@ def p_funcion(t):
 
     elif(t[1] == '('):        
          
-        t[0] = Cast_(Identifier(t[4]),t[2])
+        t[0] = Cast_(Identifier(t[4], t.lineno(4), t.lexpos(4)),t[2], t.lineno(2), t.column(2))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #(
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
@@ -795,7 +800,7 @@ def p_tipo(t):
 
 def p_f_numero(t):
     'F  : NUMERO'
-    t[0] = Number(t[1])
+    t[0] = Number(t.lineno(1), t.lexpos(1), t[1])
     #region
     global contador, conNode, fgraph,csList
     fgraph.write("n00"+str(conNode)+";\n")   #node
@@ -805,7 +810,7 @@ def p_f_numero(t):
 
 def p_f_id(t):
     'F  : ID'
-    t[0] = Identifier(t[1])
+    t[0] = Identifier(t[1], t.lineno(1), t.lexpos(1))
     #region
     global contador, conNode, fgraph,corcheList
     fgraph.write("n00"+str(conNode)+";\n")   #node
@@ -815,7 +820,7 @@ def p_f_id(t):
 
 def p_f_idARRAY(t):
     'F  : ID CORCHETES'
-    t[0] = IdentifierArray(t[1],t[2])
+    t[0] = IdentifierArray(t[1],t[2],t.lineno(1), t.lexpos(1))
     #region
     global contador, conNode, fgraph,corcheList
     fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
@@ -837,7 +842,7 @@ def p_f_cadena(t):
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
     csList.append(conNode)
     #endregion
-    t[0] = String_(t[1])
+    t[0] = String_(t[1], t.lineno(1), t.lexpos(1))
 
 def p_f_char(t):
     'F  : CHAR_'
@@ -847,7 +852,7 @@ def p_f_char(t):
     fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
     csList.append(conNode)
     #endregion
-    t[0] = String_(t[1])
+    t[0] = String_(t[1], t.lineno(1), t.lexpos(1))
 
 def p_error(t):
     print("Error sintactico en '%s'" % t.value + "line: "+ str(t.lineno))
