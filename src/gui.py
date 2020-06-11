@@ -336,7 +336,8 @@ class Ui_Augus(object):
             self.msgBox.exec()
         
     def fn_Ejecutar_Ascendente(self):
-        #try:            
+        #try:
+            #region creations of reports
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
@@ -344,6 +345,7 @@ class Ui_Augus(object):
             fgraph = open('../reports/graph.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
+            #endregion
 
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             content += '\n'

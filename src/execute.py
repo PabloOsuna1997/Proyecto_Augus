@@ -185,10 +185,10 @@ def Declaration_(instruction, ts,f):
 
         if isinstance(instruction.val, ExpressionsDeclarationArray):
             valor = valueArray(instruction.id, instruction.val, ts, valor)
-            #print("res: " + str(valor))
-        
+                    
         type_ = TS.TypeData.ARRAY
-        sym = TS.Symbol(instruction.id, type_, valor, currentAmbit, 0, 0)
+        listaKeys = valor.values()
+        sym = TS.Symbol(instruction.id, type_, valor, currentAmbit, 0, len(listaKeys))
         #valueArray(sym, instruction.val, ts)        
         if ts.exist(instruction.id) != 1: 
             ts.add(sym)
@@ -400,21 +400,26 @@ def valueExpression(instruction, ts):
     elif isinstance(instruction, IdentifierArray):
         try:
             sym = ts.get(instruction.id).valor
-            d = ast.literal_eval(str(sym))
-            tmp = d
-            i = 0
-            while i < len(instruction.expressions)-1:
-                value = valueExpression(instruction.expressions[i], ts)
-                tmp = tmp.setdefault(value, ts)
-                if tmp == None:
-                    se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
-                    semanticErrorList.append(se)
-                    return '#'
-                i += 1
+            if isinstance(sym, str):
+                #es un string pero con posiciones
+                print("estas tratando de acceder a un arreglo")
+            else:
+                #manejo normal de array
+                d = ast.literal_eval(str(sym))
+                tmp = d
+                i = 0
+                while i < len(instruction.expressions)-1:
+                    value = valueExpression(instruction.expressions[i], ts)
+                    tmp = tmp.setdefault(value, ts)
+                    if tmp == None:
+                        se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
+                        semanticErrorList.append(se)
+                        return '#'
+                    i += 1
 
-            result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
-            #print("Resultado de la consulta: " + str(result))
-            return result
+                result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
+                #print("Resultado de la consulta: " + str(result))
+                return result
         except:
             se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
             semanticErrorList.append(se)
