@@ -28,14 +28,14 @@ class Ui_Augus(object):
     
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
-        Augus.resize(898, 616)
+        Augus.resize(998, 616)
         self.centralwidget = QtWidgets.QWidget(Augus)
         self.centralwidget.setObjectName("centralwidget")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(20, 20, 471, 541))
         self.tabWidget.setObjectName("tabWidget")
         self.textEditConsole = QtWidgets.QTextEdit(self.centralwidget)
-        self.textEditConsole.setGeometry(QtCore.QRect(510, 20, 361, 541))
+        self.textEditConsole.setGeometry(QtCore.QRect(510, 20, 461, 541))
         self.textEditConsole.setObjectName("textEditConsole")
         Augus.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Augus)
@@ -247,10 +247,10 @@ class Ui_Augus(object):
             fgraph = open('../reports/tsReport.dot','w+') #creamos el archivo
             fgraph.write("digraph H { parent [ shape=plaintext label=< <table border=\'1\' cellborder=\'1\'>")                    
             fgraph.write("<tr><td colspan=\"3\">REPORTE DE TABLA DE SIMBOLOS</td></tr>")
-            fgraph.write("<tr><td port=\'port_one\'>ID</td><td port=\'port_two\'>TIPO</td><td port=\'port_three\'>VALOR</td><td port=\'port_four\'>DECLARADA EN</td><td port=\'port_five\'>DIMENSION</td><td port=\'port_six\'>REFERENCIA</td></tr>")
+            fgraph.write("<tr><td port=\'port_one\'>ID</td><td port=\'port_two\'>TIPO</td><td port=\'port_three\'>VALOR</td><td port=\'port_four\'>DECLARADA EN</td><td port=\'port_five\'>DIMENSION</td><td port=\'port_six\'>REFERENCIA</td><td port=\'port_seven\'>PARAMETROS</td></tr>")
             
             for key, val in execute.tsGlobal.symbols.items():
-                fgraph.write(f"<tr><td port=\'port_one\'>{str(key)}</td><td port=\'port_two\'>{str(val.tipo)}</td><td port=\'port_three\'>{str(val.valor)}</td><td port=\'port_four\'>{str(val.declarada)}</td><td port=\'port_five\'>{str(val.dimension)}</td><td port=\'port_six\'>{str(val.referencia)}</td></tr>")
+                fgraph.write(f"<tr><td port=\'port_one\'>{str(key)}</td><td port=\'port_two\'>{str(val.tipo)}</td><td port=\'port_three\'>{str(val.valor)}</td><td port=\'port_four\'>{str(val.declarada)}</td><td port=\'port_five\'>{str(val.dimension)}</td><td port=\'port_six\'>{str(val.referencia)}</td><td port=\'port_seven\'>{str(val.parametros)}</td></tr>")
                         
             fgraph.write("</table> >]; }")
             fgraph.close()
@@ -377,12 +377,17 @@ class Ui_Augus(object):
                 print("\nConsole:")
                 self.textEditConsole.setText("")
                 self.textEditConsole.setPlainText("CONSOLE:\n")
+                textoLinea = '> '
                 for element in printList:
                     if element == "\\n" or element == '\\n':
-                        self.textEditConsole.append('\n')               
+                        self.textEditConsole.append(textoLinea +"\n")
+                        textoLinea = '> '          
                     else:
-                        self.textEditConsole.append("> " + str(element) + "\n")
+                        textoLinea += str(element)
+                        #self.textEditConsole.append("> " + str(element))
                         print( "> " + str(element))
+                self.textEditConsole.append(textoLinea +"\n")
+                textoLinea = '> '
                 
                 if len(execute.semanticErrorList) == 0:
                     
@@ -401,7 +406,7 @@ class Ui_Augus(object):
                     self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     self.msgBox.exec()
 
-            #creat to report
+            #region end to report
             fgraph = open('../reports/ast.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
             fgraph.flush() 
@@ -413,6 +418,7 @@ class Ui_Augus(object):
             fgraph.close()
           
             sys.stdout.flush()
+            #endregion
             
         #except:
             #self.msgBox = QtWidgets.QMessageBox()

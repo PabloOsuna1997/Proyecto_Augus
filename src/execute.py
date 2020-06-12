@@ -215,7 +215,7 @@ def Declaration_(instruction, ts,f):
     UpdateReferences(instruction.id, val, ts)
 
 def UpdateReferences(idReferencia, val,ts):
-    print("Actualizando las referencias.")
+    #print("Actualizando las referencias.")
     for key in ts.symbols:
         if ts.get(key).referencia == idReferencia:
             ts.updateReference(key,val)
@@ -451,7 +451,7 @@ def valueExpression(instruction, ts):
         msgBox.setText("Ingrese un valor en la consola.")
         msgBox.setIcon(QtWidgets.QMessageBox.Question)
         msgBox.exec()
-        valor = input()
+        valor = input("Porfavor ingrese un valor:")
         try:
             val = valor.split('.')
             if len(val) > 1:
