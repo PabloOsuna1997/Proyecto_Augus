@@ -17,7 +17,8 @@ semanticErrorList = []
 tsGlobal = {}
 lecturasRead = []       #sera modificada desde gui
 la = 0
-co = 0
+co = 0 
+pasadas = 0
 
 def execute(input):
     #print(input)
@@ -47,25 +48,72 @@ def execute(input):
 
     return printList
 
+printDebug = []
+def executeDebug(input):
+    # print(input)
+    global semanticErrorList, currentAmbit, currentParams, contador, tsGlobal
+
+    contador = 4  # for grapho
+    currentAmbit = 'main'  # current ambit
+    currentParams[:] = []  # list of parameters that the current function will have
+    semanticErrorList[:] = []
+
+    f = open("../reports/graph.dot", "a")
+    f.write("n000 ;\n")
+    f.write("n000 [label=\"Inicio\"] ;\n")
+    f.write("n000 -- n001;\n")
+    f.write("n001 [label=\"Instrucciones\"] ;\n")
+
+    tsGlobal = {}
+    tsGlobal = TS.SymbolTableDebug()
+    printList = []
+    printList[:] = []
+    #semanticErrorList[:] = []
+    process(input, tsGlobal, printList, f)
+    f.close()
+    print("Tabla de simbolos: ")
+    for i in tsGlobal.symbols:
+        val = tsGlobal.get(i)
+        print(str(i) + ", " + str(val.valor) + ", " + str(val.tipo) + ", " + str(
+            val.declarada) + ", " + str(val.parametros))
+
+    return printList
+
 def process(instructions, ts, printList,f):
     global currentAmbit, pasadas, currentParams
-    i = 0
-    while i < len(instructions):
-        #isinstance verificar tipos 
-        b = instructions[i]      
-        if isinstance(b, Print_):
-            f.write("n001 -- n002;\n")
-            f.write("n002 [label=\"Print\"] ;\n")
-            Print(b,ts, printList,f)
-        elif isinstance(b, Declaration):
-            f.write("n001 -- n003;\n")
-            f.write("n003 [label=\"Declaracion\"] ;\n")
-            Declaration_(b, ts,f)
-        elif isinstance(b, If):
-            result = valueExpression(b.expression, ts)
-            if result == 1:
+    try:
+        i = 0
+        while i < len(instructions):
+            #isinstance verificar tipos 
+            b = instructions[i]      
+            if isinstance(b, Print_):
+                f.write("n001 -- n002;\n")
+                f.write("n002 [label=\"Print\"] ;\n")
+                Print(b,ts, printList,f)
+            elif isinstance(b, Declaration):
+                f.write("n001 -- n003;\n")
+                f.write("n003 [label=\"Declaracion\"] ;\n")
+                Declaration_(b, ts,f)
+            elif isinstance(b, If):
+                result = valueExpression(b.expression, ts)
+                if result == 1:
+                    tmp = i
+                    i = goto(i+1, instructions, b.label)
+                    if i != 0:
+                        pasadas = 0
+                        #print("realizando salto a: "+ str(b.label))
+                    else:
+                        i = tmp
+                        #print("error semantico, etiqueta no existe")
+                        se = seOb(f"Error: etiqueta {b.label} no existe", b.line, b.column)
+                        semanticErrorList.append(se)
+                elif result == '#':
+                    se = seOb(f"Error: Condicion no valida", b.line, b.column)
+                    semanticErrorList.append(se)
+            elif isinstance(b, Goto):
+                #seteamos la instruccion anterior como la llamada al goto
                 tmp = i
-                i = goto(i+1, instructions, b.label)
+                i = goto(i, instructions, b.label)
                 if i != 0:
                     pasadas = 0
                     #print("realizando salto a: "+ str(b.label))
@@ -74,56 +122,107 @@ def process(instructions, ts, printList,f):
                     #print("error semantico, etiqueta no existe")
                     se = seOb(f"Error: etiqueta {b.label} no existe", b.line, b.column)
                     semanticErrorList.append(se)
+            elif isinstance(b, Label):
+                #insert to symbols table
+                #type_ = 0
+                if len(currentParams) > 0:
+                    #procedimiento tipo 7, cambiara a funcion si lee un $Vn
+                    if ts.exist(b.label) == 1:
+                        #print("exists: "+ str(b.label))
+                        type_ = ts.get(b.label).tipo
+                    else:
+                        type_ = TS.TypeData.PROCEDIMIENTO
+                else:
+                    type_= TS.TypeData.CONTROL
+
+                #print("antes de insertar funcion: " + str(currentParams))
+                symbol = TS.Symbol(b.label, type_, 0, currentAmbit, currentParams.copy())
+                currentParams[:] = [] #clean to current Params    
+                #print("despues de insertar funcion: " + str(symbol.parametros))
+                if ts.exist(symbol.id) != 1:
+                    ts.add(symbol)
+                else:
+                    ts.update(symbol)
+                currentAmbit = b.label
+            elif isinstance(b, Exit):
+                break
+            elif isinstance(b, Unset):
+                if ts.delete(b.id) == 1:
+                    print('variable eliminada.')
+                else:
+                    se = seOb(f'Error Semantico: No se pudo eliminar {b.id}, en funcion unset.', b.line, b.column)
+                    semanticErrorList.append(se)
+
+            i += 1
+    except:
+        if isinstance(instructions, Print_):
+            f.write("n001 -- n002;\n")
+            f.write("n002 [label=\"Print\"] ;\n")
+            Print(instructions,ts, printList,f)
+        elif isinstance(instructions, Declaration):
+            f.write("n001 -- n003;\n")
+            f.write("n003 [label=\"Declaracion\"] ;\n")
+            Declaration_(instructions, ts,f)
+        elif isinstance(instructions, If):
+            result = valueExpression(instructions.expression, ts)
+            if result == 1:
+                tmp = i
+                i = goto(i+1, instructions, instructions.label)
+                if i != 0:
+                    pasadas = 0
+                        #print("realizando salto a: "+ str(b.label))
+                else:
+                    i = tmp
+                    #print("error semantico, etiqueta no existe")
+                    se = seOb(f"Error: etiqueta {instructions.label} no existe", instructions.line, instructions.column)
+                    semanticErrorList.append(se)
             elif result == '#':
-                se = seOb(f"Error: Condicion no valida", b.line, b.column)
+                se = seOb(f"Error: Condicion no valida", instructions.line, instructions.column)
                 semanticErrorList.append(se)
-        elif isinstance(b, Goto):
+        elif isinstance(instructions, Goto):
             #seteamos la instruccion anterior como la llamada al goto
             tmp = i
-            i = goto(i, instructions, b.label)
+            i = goto(i, instructions, instructions.label)
             if i != 0:
                 pasadas = 0
                 #print("realizando salto a: "+ str(b.label))
             else:
                 i = tmp
                 #print("error semantico, etiqueta no existe")
-                se = seOb(f"Error: etiqueta {b.label} no existe", b.line, b.column)
+                se = seOb(f"Error: etiqueta {instructions.label} no existe", instructions.line, instructions.column)
                 semanticErrorList.append(se)
-        elif isinstance(b, Label):
+        elif isinstance(instructions, Label):
             #insert to symbols table
             #type_ = 0
             if len(currentParams) > 0:
                 #procedimiento tipo 7, cambiara a funcion si lee un $Vn
-                if ts.exist(b.label) == 1:
+                if ts.exist(instructions.label) == 1:
                     #print("exists: "+ str(b.label))
-                    type_ = ts.get(b.label).tipo
+                    type_ = ts.get(instructions.label).tipo
                 else:
                     type_ = TS.TypeData.PROCEDIMIENTO
             else:
                 type_= TS.TypeData.CONTROL
 
             #print("antes de insertar funcion: " + str(currentParams))
-            symbol = TS.Symbol(b.label, type_, 0, currentAmbit, currentParams.copy())
+            symbol = TS.Symbol(instructions.label, type_, 0, currentAmbit, currentParams.copy())
             currentParams[:] = [] #clean to current Params    
             #print("despues de insertar funcion: " + str(symbol.parametros))
             if ts.exist(symbol.id) != 1:
                 ts.add(symbol)
             else:
                 ts.update(symbol)
-            currentAmbit = b.label
-        elif isinstance(b, Exit):
-            break
-        elif isinstance(b, Unset):
-            if ts.delete(b.id) == 1:
+            currentAmbit = instructions.label
+        elif isinstance(instructions, Exit):
+            return
+        elif isinstance(instructions, Unset):
+            if ts.delete(instructions.id) == 1:
                 print('variable eliminada.')
             else:
                 se = seOb(f'Error Semantico: No se pudo eliminar {b.id}, en funcion unset.', b.line, b.column)
                 semanticErrorList.append(se)
 
-        i += 1
-
-#---instructions 
-pasadas = 0
+#---instructions
 def goto(i, instructions, label):
     global pasadas
     c = i
@@ -188,6 +287,7 @@ def Declaration_(instruction, ts,f):
             #update label to function
             ts.updateFunction(currentAmbit, TS.TypeData.FUNCION)
     else:
+        print(instruction.id)
         valor = {}
         if ts.exist(instruction.id) == 1: 
             valor = ts.get(instruction.id).valor       

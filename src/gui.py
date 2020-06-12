@@ -9,11 +9,10 @@
 from PIL import Image
 import grammar
 import reportGenerator as rg
-import reportSemantic as sg
-import reportTS as tg
 import execute
 from expressions import *
 from instructions import *
+import SymbolTable as TS
 import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
@@ -24,11 +23,19 @@ data = []
 dataS = []
 dataSema = []
 dataTs = []
+pasadas = 0
+
+tsDebug = TS.SymbolTable()
+printListDebug = []
+instructionsDebug = []
+printPases = []
+conttadorIns = 0
+from semanticObject import *
 class Ui_Augus(object):
     
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
-        Augus.resize(998, 616)
+        Augus.resize(980, 616)
         self.centralwidget = QtWidgets.QWidget(Augus)
         self.centralwidget.setObjectName("centralwidget")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -37,6 +44,23 @@ class Ui_Augus(object):
         self.textEditConsole = QtWidgets.QTextEdit(self.centralwidget)
         self.textEditConsole.setGeometry(QtCore.QRect(510, 20, 461, 541))
         self.textEditConsole.setObjectName("textEditConsole")
+        self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(51, 252, 255);
+                                            font: 12pt \"consolas\";''' )
+        self.textEditConsole.setPlainText("CONSOLE:\n")
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.setGeometry(QtCore.QRect(985, 10, 75, 23))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton.setText("Next")
+        self.textDebug = QtWidgets.QTextEdit(self.centralwidget)
+        self.textDebug.setGeometry(QtCore.QRect(985, 50, 480, 510))
+        self.textDebug.setObjectName("textDebug")
+        self.textDebug.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(0, 255, 60);
+                                            font: 12pt \"consolas\";''' )
+        self.textDebug.setPlainText("DEBUG:\n")
         Augus.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Augus)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 898, 21))
@@ -92,6 +116,8 @@ class Ui_Augus(object):
         self.actionAscendente.setObjectName("actionAscendente")
         self.actionDescendente = QtWidgets.QAction(Augus)
         self.actionDescendente.setObjectName("actionDescendente")
+        self.actionDebuguer = QtWidgets.QAction(Augus)
+        self.actionDebuguer.setObjectName("actionDebuguer")
         self.actionCambiar_color_de_fondo = QtWidgets.QAction(Augus)
         self.actionCambiar_color_de_fondo.setObjectName("actionCambiar_color_de_fondo")
         self.actionAyuda = QtWidgets.QAction(Augus)
@@ -113,6 +139,7 @@ class Ui_Augus(object):
         self.menuEditar.addAction(self.actionBuscar)
         self.menuEjecutar.addAction(self.actionAscendente)
         self.menuEjecutar.addAction(self.actionDescendente)
+        self.menuEjecutar.addAction(self.actionDebuguer)
         self.menuOpciones.addAction(self.actionCambiar_color_de_fondo)
         self.menuAyuda.addAction(self.actionAyuda)
         self.menubar.addAction(self.menuArchivo.menuAction())
@@ -126,12 +153,12 @@ class Ui_Augus(object):
         self.tabWidget.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(Augus)
 
-        
         #actions
         self.actionNuevo.triggered.connect(lambda : self.fn_Nuevo())
         self.actionAbrir.triggered.connect(lambda : self.fn_Abrir())
         self.actionAscendente.triggered.connect(lambda : self.fn_Ejecutar_Ascendente())
         self.actionDescendente.triggered.connect(lambda : self.fn_Ejecutar_Descendente())
+        self.actionDebuguer.triggered.connect(lambda : self.fn_Ejecutar_Debuguer())
         self.actionGuardar.triggered.connect(lambda : self.fn_Guardar())
         self.actionGuardar_Como.triggered.connect(lambda : self.fn_Guardar_Como())
         self.actionCerrar.triggered.connect(lambda : self.fn_Cerrar())
@@ -141,13 +168,7 @@ class Ui_Augus(object):
         self.actionReporteSemantico.triggered.connect(lambda : self.fn_repSemantico())
         self.actionReporteAST.triggered.connect(lambda : self.fn_repAST())
         self.actionReporteTS.triggered.connect(lambda : self.fn_repTS())
-
-
-        self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
-                                            border-color: rgb(18, 18, 18);
-                                            color: rgb(51, 252, 255);
-                                            font: 12pt \"consolas\";''' )
-        self.textEditConsole.setPlainText("CONSOLE:\n")
+        self.pushButton.clicked.connect(lambda : self.fn_Next())
 
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
@@ -175,6 +196,7 @@ class Ui_Augus(object):
         self.actionBuscar.setText(_translate("Augus", "Buscar"))
         self.actionAscendente.setText(_translate("Augus", "Ascendente"))
         self.actionDescendente.setText(_translate("Augus","Descendente"))
+        self.actionDebuguer.setText(_translate("Augus","Debuguer"))
         self.actionCambiar_color_de_fondo.setText(_translate("Augus", "Cambiar color de fondo"))
         self.actionAyuda.setText(_translate("Augus", "Ayuda"))
 
@@ -279,7 +301,7 @@ class Ui_Augus(object):
         print("reportando semantico")
         global dataSema
         try:
-            sg.export_to_pdf(dataTs,3)
+            rg.export_to_pdf(dataSema,3)
             dataSema[:] = []
             execute.semanticErrorList[:] = []         
 
@@ -336,10 +358,175 @@ class Ui_Augus(object):
             self.msgBox.setText("please close report lexical.")
             self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
             self.msgBox.exec()
+
+    def fn_Next(self):
+        print("siguiente.")
+        global tsDebug, printListDebug, instructionsDebug, conttadorIns, printPases
+        #not exist errors
+        # para debuguear debo ir mandando instruccion por instruccion
+        if conttadorIns < len(instructionsDebug):
+            if isinstance(instructionsDebug[conttadorIns], If):
+                result = execute.valueExpression(instructionsDebug[conttadorIns].expression, execute.tsGlobal)                
+                self.textDebug.append(f'if: {result} ->')                
+                if result == 1:
+                    self.textDebug.append('true')
+                    tmp = conttadorIns
+                    conttadorIns = execute.goto(conttadorIns + 1, instructionsDebug, instructionsDebug[conttadorIns].label)
+                    if conttadorIns != 0:
+                        execute.pasadas = 0
+                        # print("realizando salto a: "+ str(b.label))
+                    else:
+                        conttadorIns = tmp
+                        # print("error semantico, etiqueta no existe")
+                        se = seOb(f"Error: etiqueta {instructionsDebug[conttadorIns].label} no existe", instructionsDebug[conttadorIns].line, instructionsDebug[conttadorIns].column)
+                        execute.semanticErrorList.append(se)
+                elif result == '#':
+                    se = seOb(f"Error: Condicion no valida", instructionsDebug[conttadorIns].line, instructionsDebug[conttadorIns].column)
+                    execute.semanticErrorList.append(se)
+                else:
+                    self.textDebug.append('false\n')
+            elif isinstance(instructionsDebug[conttadorIns], Goto):
+                # seteamos la instruccion anterior como la llamada al goto
+                tmp = conttadorIns
+                conttadorIns = execute.goto(conttadorIns, instructionsDebug,instructionsDebug[conttadorIns].label)
+                if conttadorIns != 0:
+                    execute.pasadas = 0
+                    # print("realizando salto a: "+ str(b.label))
+                else:
+                    conttadorIns = tmp
+                    # print("error semantico, etiqueta no existe")
+                    se = seOb(f"Error: etiqueta {instructionsDebug[conttadorIns].label} no existe", instructionsDebug[conttadorIns].line, instructionsDebug[conttadorIns].column)
+                    execute.semanticErrorList.append(se)
+            else:
+                printListDebug.append(execute.executeDebug(instructionsDebug[conttadorIns]))
+                #tsDebug.updateDict(execute.tsGlobal)
+            conttadorIns += 1
+
+        print("\nConsole:")
+        self.textEditConsole.setText("")
+        self.textEditConsole.setPlainText("CONSOLE:\n")
+        textoLinea = '> '
+        if len(printListDebug) > 0:
+            for element in printListDebug:
+                if len(element) > 0:
+                    if element[0]== "\\n" or element[0] == '\\n':
+                        self.textEditConsole.append(textoLinea +"\n")
+                        textoLinea = '> '          
+                    else:
+                        textoLinea += str(element[0])
+                        #self.textEditConsole.append("> " + str(element))
+                        print( "> " + str(element))
+            self.textEditConsole.append(textoLinea +"\n")
+            textoLinea = '> '
+
+        self.textDebug.setText("")
+        self.textDebug.setPlainText("DEBUG:\n")
+        for key, val in execute.tsGlobal.symbols.items():
+            self.textDebug.append(f'id: {str(key)} valor: {str(val.valor)} \n')
+
+        if conttadorIns == len(instructionsDebug)-1:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Analisis correcto.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            self.msgBox.exec()
+            Augus.resize(980, 616)
+
+        elif len(execute.semanticErrorList) != 0:                              
+            dataSema = [("DESCRIPCION", "COLUMNA", "LINEA")]
+            for i in execute.semanticErrorList:
+                dataSema.append((str(i.description), str(i.column), str(i.line)))
+                    
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Existen errores semanticos.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            self.msgBox.exec()
         
+    def fn_Ejecutar_Debuguer(self):
+        print("ejecutando debuguer")
+        global tsDebug, printListDebug, instructionsDebug, conttadorIns, printPases
+        Augus.resize(1500, 616)
+        
+        try:
+            execute.contador = 4  #for grapho   
+            execute.currentAmbit = 'main'   #current ambit
+            execute.currentParams = []  #list of parameters that the current function will have
+            execute.semanticErrorList = []
+            execute.tsGlobal = {}
+            execute.lecturasRead = []       #sera modificada desde gui
+            execute.la = 0
+            execute.co = 0 
+            execute.pasadas = 0
+            tsDebug = {}
+            printListDebug[:] = []
+            instructionsDebug[:] = []
+            conttadorIns = 0
+            printPases[:] = []
+
+            #region creations of reports
+            fgraph = open('../reports/ast.dot','w+') #creamos el archivo
+            fgraph.write("graph \"\"{ node [shape=box];\n")          
+            fgraph.close()
+
+            fgraph = open('../reports/graph.dot','w+') #creamos el archivo
+            fgraph.write("graph \"\" {")
+            fgraph.close()
+            #endregion
+
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            content += '\n'
+            result = grammar.parse(content)
+            instructionsDebug = result[:]   #copio las instrucciones a la lista global
+
+            # si exists errores lexicos o sintacticos traera una lista vacia            
+            global data, dataS, dataSema, dataTs
+            if len(result) == 0:
+                self.msgBox = QtWidgets.QMessageBox()
+                self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
+                self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+                self.msgBox.exec()
+
+                if len(grammar.LexicalErrosList) > 0:                    
+                    data = [("LEXEMA", "COLUMNA", "LINEA")]
+                    for i in grammar.LexicalErrosList:
+                        data.append((str(i.lexema), str(i.column), str(i.line)))
+                
+                if len(grammar.sintacticErroList) > 0:                    
+                    dataS = [("LEXEMA", "COLUMNA", "LINEA")]
+                    for i in grammar.sintacticErroList:
+                        dataS.append((str(i.lexema), str(i.column), str(i.line)))
+             
+            #region end to report
+            fgraph = open('../reports/ast.dot','a') #agregamos al archivo '}'
+            fgraph.write("}")
+            fgraph.flush() 
+            fgraph.close()
+
+            fgraph = open('../reports/graph.dot','a') #agregamos al archivo '}'
+            fgraph.write("}")
+            fgraph.flush()
+            fgraph.close()
+          
+            sys.stdout.flush()
+            #endregion
+            
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.setText("Area Vacia.")
+            self.msgBox.exec()
+
     def fn_Ejecutar_Ascendente(self):
         #try:
             #region creations of reports
+            execute.contador = 4  #for grapho   
+            execute.currentAmbit = 'main'   #current ambit
+            execute.currentParams = []  #list of parameters that the current function will have
+            execute.semanticErrorList = []
+            execute.tsGlobal = {}
+            execute.lecturasRead = []       #sera modificada desde gui
+            execute.la = 0
+            execute.co = 0 
+            execute.pasadas = 0
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()

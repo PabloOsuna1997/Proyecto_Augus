@@ -1,7 +1,7 @@
-<?php
+
 #ARCHIVO BASICO
 main:
-$t0 = ("ARCHIVO BASICO\n");
+$t0 = "ARCHIVO BASICO\n";
 print($t0);
 print($t0[0]);
 print($t0[8]);
@@ -11,12 +11,12 @@ print("\n");
 #-------------ingreso de datos------------
 print("Ingresa un numero: \n");
 print("\n");
-#$t1 = read();  #se debe habilitar para las pruebas en su aplicaciÃ³n
+#$t1 = read();  #se debe habilitar para las pruebas en su aplicación
 $t1 = 1;
 print("\n");
 print("Ingreso un segundo numero: ");
 print("\n");
-#$t2 = read(); #se debe habilitar para las pruebas en su aplicaciÃ³n
+#$t2 = read(); #se debe habilitar para las pruebas en su aplicación
 $t2 = 1;
 $t3 = $t1+$t2;
 print("La suma de los numeros es: ");
@@ -27,7 +27,7 @@ print("La resta de los numeros es: ");
 print($t3);
 print("\n");
 $t3 = $t1*$t2;
-print("La multiplicaciÃ³n de los numeros es: ");
+print("La multiplicación de los numeros es: ");
 print($t3);
 print("\n");
 $t3 = $t1/$t2;
@@ -47,7 +47,7 @@ print($t3);
 
 
 error: 
-print("\nERROR: no se puede realizar una divisiï¿½n entre 0.'");
+print("\nERROR: no se puede realizar una divisin entre 0.");
 
 
 exit;

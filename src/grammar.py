@@ -716,7 +716,7 @@ def p_funcion(t):
 
     elif(t[1] == '('):        
          
-        t[0] = Cast_(Identifier(t[4], t.lineno(4), t.lexpos(4)),t[2], t.lineno(2), t.column(2))
+        t[0] = Cast_(Identifier(t[4], t.lineno(4), t.lexpos(4)),t[2], t.lineno(2), t.lexpos(2))
         #region
         fgraph.write("n00"+str(conNode+1)+";\n")   #(
         fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
@@ -851,7 +851,7 @@ def p_f_char(t):
 def p_error(t):
     print("Error sintactico en '%s'" % t.value + "line: "+ str(t.lineno))
     global sintacticErroList
-    so = sinOb(t.value, t.lineno, t.lexpos)
+    so = sinOb(t.value, t.lineno, find_column(input_, t))
     sintacticErroList.append(so)
    
 

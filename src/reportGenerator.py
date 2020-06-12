@@ -32,8 +32,16 @@ def export_to_pdf(data, type_):
     y_offset = 115
     # Space between rows.
     padding = 15
-                
-    xlist = [x + x_offset for x in [100, 200, 275, 350]]
+
+    xlist = []
+    if type_ == 2:       
+        xlist = [x + x_offset for x in [10, 200, 275, 350]]
+    elif type_ == 1:
+        xlist = [x + x_offset for x in [100, 200, 275, 350]]
+    else:
+        x_offset = 10
+        xlist = [x + x_offset for x in [100, 400, 475, 550]]
+
     ylist = [h - y_offset - i*padding for i in range(max_rows_per_page + 1)]
                 
     for rows in grouper(data, max_rows_per_page):
