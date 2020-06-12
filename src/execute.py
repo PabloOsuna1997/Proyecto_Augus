@@ -174,6 +174,8 @@ def Declaration_(instruction, ts,f):
         if isinstance(instruction.val, ReferenceBit):
             if isinstance(instruction.val.expression, Identifier):
                 sym.referencia = instruction.val.expression.id
+            #elif isinstance(instruction.val.expression, IdentifierArray):
+                #sym.referencia = instruction.val.expression.id
         if ts.exist(instruction.id) != 1:
             ts.add(sym)
         else:
@@ -209,6 +211,16 @@ def Declaration_(instruction, ts,f):
     f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
     contador += 1
 
+    #validar las referencias 
+    UpdateReferences(instruction.id, val, ts)
+
+def UpdateReferences(idReferencia, val,ts):
+    print("Actualizando las referencias.")
+    for key in ts.symbols:
+        print(f'variable {key}')
+        if ts.get(key).referencia == idReferencia:
+            ts.updateReference(key,val)
+                  
 ####--------resolutions
 def getType(val):
     if isinstance(val, int): return TS.TypeData.INT

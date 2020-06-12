@@ -52,6 +52,12 @@ class SymbolTable() :
         else:
             self.symbols[id].tipo = type_
 
+    def updateReference(self, id, val):
+        if not id in self.symbols:
+            print("Error: variable "+ id + " not defiened." )
+        else:
+            self.symbols[id].valor = val
+
     def delete(self, id):
         if id in self.symbols:
             del self.symbols[id]
