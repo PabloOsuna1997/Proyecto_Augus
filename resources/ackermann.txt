@@ -1,4 +1,12 @@
 main:
+$t1 = 5;
+$t2 = &$t1;
+$t3 = &$t2;
+print($t1);
+print($t2);
+$t1 = 45;
+print($t1);
+print($t2);
     $s0 = array(); # stack
     $sp = -1; # null pointer
     $a0 = 2; # m

@@ -217,9 +217,10 @@ def Declaration_(instruction, ts,f):
 def UpdateReferences(idReferencia, val,ts):
     print("Actualizando las referencias.")
     for key in ts.symbols:
-        print(f'variable {key}')
         if ts.get(key).referencia == idReferencia:
             ts.updateReference(key,val)
+            #call recursive a child the current variable
+            UpdateReferences(key, ts.get(key).valor,ts)
                   
 ####--------resolutions
 def getType(val):
