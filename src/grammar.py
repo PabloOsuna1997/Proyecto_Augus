@@ -61,8 +61,8 @@ tokens = [
 
 # er tokens
 
-t_PUNTOCOMA  = r';'
-t_DOSPUNTOS = r':'
+t_PUNTOCOMA  = r'\;'
+t_DOSPUNTOS = r'\:'
 t_LLAVEIZQ  = r'\{'
 t_LLAVEDER  = r'\}'
 t_PARIZQ    = r'\('
@@ -70,27 +70,27 @@ t_PARDER    = r'\)'
 t_CORIZQ    = r'\['
 t_CORDER    = r'\]'
 t_DOLAR     = r'\$'
-t_NOTBIT    = r'~'
-t_ANDBIT    = r'&'
+t_NOTBIT    = r'\~'
+t_ANDBIT    = r'\&'
 t_ORBIT     = r'\|'
 t_XORBIT    = r'\^'
-t_SHIFTIZQ  = r'<<'
-t_SHIFTDER  = r'>>'
+t_SHIFTIZQ  = r'\<\<'
+t_SHIFTDER  = r'\>\>'
 t_NOTLOGICA = r'\!'
-t_MENOS     = r'-'
+t_MENOS     = r'\-'
 t_MAS       = r'\+'
 t_POR       = r'\*'
-t_DIV       = r'/'
-t_MODULO    = r'%'
-t_AND       = r'&&'
+t_DIV       = r'\/'
+t_MODULO    = r'\%'
+t_AND       = r'\&\&'
 t_OR        = r'\|\|'
 t_IGUAL     = r'\='
 t_IGUALQUE  = r'\=\='
 t_DIFERENTE = r'\!\='
-t_MAYORIGUAL= r'>='
-t_MENORIGUAL= r'<='
-t_MAYORQUE  = r'>'
-t_MENORQUE  = r'<'
+t_MAYORIGUAL= r'\>\='
+t_MENORIGUAL= r'\<\='
+t_MAYORQUE  = r'\>'
+t_MENORQUE  = r'\<'
 
 from lexicalObject import *
 from sintacticObject import *
@@ -589,9 +589,7 @@ def p_operacion(t):
         senteList.append(conNode+3)
         conNode += 3
     #endregion
-    #print(str(t[1]) +", "+str(t[2]))
-    if(t[2] == '+'):
-        t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2))        
+    if(t[2] == '+'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2))        
     elif(t[2] == '-'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS, t.lineno(2), t.lexpos(2))
     elif(t[2] == '*'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR, t.lineno(2), t.lexpos(2))
     elif(t[2] == '/'): t[0] = BinaryExpression(t[1],t[3],Aritmetics.DIV, t.lineno(2), t.lexpos(2))
@@ -635,7 +633,20 @@ def p_operacion(t):
         senteList.append(conNode+2)
         conNode += 2
         #endregion
-
+    elif(t[1] == '&'):
+        #print("andbit")
+        t[0] = ReferenceBit(t[2], t.lineno(1), t.lexpos(1))
+        #region
+        fgraph.write("n00"+str(conNode+1)+";\n")   #&
+        fgraph.write("n00"+str(conNode+1)+" [label=\""+str(t[1])+"\"] ;\n")
+        fgraph.write("n00"+str(conNode+2)+";\n")   #f
+        fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
+        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
+        senteList.append(conNode+1)
+        senteList.append(conNode+2)
+        conNode += 2
+        #endregion
+    
     #relational and logical
     elif(t[2] == '&&'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.AND, t.lineno(2), t.lexpos(2))
     elif(t[2] == '||'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.OR, t.lineno(2), t.lexpos(2))
@@ -647,19 +658,6 @@ def p_operacion(t):
     elif(t[2] == '>'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE, t.lineno(2), t.lexpos(2))
     elif(t[2] == '<'): t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE, t.lineno(2), t.lexpos(2))
     #bit to bit
-    elif(t[2] == '&'): 
-        t[0] = RelationalBit(t[1],t[3], BitToBit.ANDBIT, t.lineno(1), t.lexpos(1))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #&
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+str(t[1])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #f
-        fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        conNode += 2
-        #endregion
-
     elif(t[2] == '|'): t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT, t.lineno(1), t.lexpos(1))
     elif(t[2] == '^'): t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT, t.lineno(1), t.lexpos(1))
     elif(t[2] == '<<'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI, t.lineno(1), t.lexpos(1))

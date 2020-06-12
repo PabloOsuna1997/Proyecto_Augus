@@ -108,6 +108,12 @@ class NotBit(BitBit):
         self.line = line
         self.column = column
 
+class ReferenceBit(BitBit):
+    def __init__(self, expression, line, column):
+        self.expression = expression
+        self.line = line
+        self.column = column
+
 class RelationalBit(BitBit):
     def __init__(self, op1, op2, operator, line, column):
         self.op1 = op1

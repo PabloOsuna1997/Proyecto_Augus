@@ -12,9 +12,11 @@ import reportGenerator as rg
 import reportSemantic as sg
 import reportTS as tg
 import execute
+from expressions import *
+from instructions import *
 import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import *
 #from PyQt5.QtGui import QColor
 
 contadorVentanas = 0
@@ -23,6 +25,7 @@ dataS = []
 dataSema = []
 dataTs = []
 class Ui_Augus(object):
+    
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
         Augus.resize(898, 616)
@@ -191,7 +194,6 @@ class Ui_Augus(object):
             self.tab,"Tab "+ str(contadorVentanas)
         )
         self.tabWidget.setCurrentIndex(self.tabWidget.count()-1)    #para poner el focus en la nueva pestaña
-
         self.msgBox = QtWidgets.QMessageBox()
         self.msgBox.setText("New area.")
         self.msgBox.exec()
@@ -369,7 +371,7 @@ class Ui_Augus(object):
                     for i in grammar.sintacticErroList:
                         dataS.append((str(i.lexema), str(i.column), str(i.line)))
             else:
-                #not exist errors
+                #not exist errors                            
                 printList = execute.execute(result)
 
                 print("\nConsole:")

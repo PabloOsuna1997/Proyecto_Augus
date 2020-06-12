@@ -7,17 +7,22 @@ import ast
 import copy
 import collections
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import *
+
 contador = 4  #for grapho   
 currentAmbit = 'main'   #current ambit
 currentParams = []  #list of parameters that the current function will have
 semanticErrorList = []
 tsGlobal = {}
+lecturasRead = []       #sera modificada desde gui
 la = 0
 co = 0
 
 def execute(input):
     #print(input)
     global semanticErrorList, currentAmbit, currentParams, contador, tsGlobal
+
     contador = 4  #for grapho   
     currentAmbit = 'main'   #current ambit
     currentParams[:] = []  #list of parameters that the current function will have
@@ -166,7 +171,9 @@ def Declaration_(instruction, ts,f):
     if val != 'array':
         type_ = getType(val)
         sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
-
+        if isinstance(instruction.val, ReferenceBit):
+            if isinstance(instruction.val.expression, Identifier):
+                sym.referencia = instruction.val.expression.id
         if ts.exist(instruction.id) != 1:
             ts.add(sym)
         else:
@@ -196,6 +203,7 @@ def Declaration_(instruction, ts,f):
             ts.update(sym)       
 
         #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
+    
     global contador
     f.write("n003 -- n00"+str(contador)+";\n")
     f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
@@ -426,8 +434,20 @@ def valueExpression(instruction, ts):
             return '#'
     elif isinstance(instruction, ReadConsole):
         #lectura de consola
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setText("Ingrese un valor en la consola.")
+        msgBox.setIcon(QtWidgets.QMessageBox.Question)
+        msgBox.exec()
         valor = input()
-        return valor
+        try:
+            val = valor.split('.')
+            if len(val) > 1:
+                valor = float(valor)
+            else:
+                valor = int(valor)
+            return valor
+        except:
+            return valor
     elif isinstance(instruction, RelationalBit):
         val1 = valueExpression(instruction.op1, ts)
         val2 = valueExpression(instruction.op2, ts)
@@ -455,5 +475,13 @@ def valueExpression(instruction, ts):
             return  ~num1
         else:
             se = seOb(f'Error: No se puede aplicar not bit  a {num1}.', instruction.line, instruction.column)
+            semanticErrorList.append(se)
+            return '#'
+    elif isinstance(instruction, ReferenceBit):
+        val = valueExpression(instruction.expression, ts)
+        if val != '#':
+            return val
+        else:
+            se = seOb(f'Error Referencia: variable {instruction.expression.id} no existe.', instruction.line, instruction.column)
             semanticErrorList.append(se)
             return '#'
