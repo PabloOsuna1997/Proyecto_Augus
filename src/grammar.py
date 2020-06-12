@@ -299,7 +299,10 @@ def p_sentencia_decla(t):
     senteList[:] = []
     conNode +=2
     #endregion
-                
+
+def p_etiqueta_error(t):
+    'ETIQUETA   : LABEL error DOSPUNTOS' 
+        
 def p_etiqueta(t):
     # i call label to recognize the label
     'ETIQUETA   : LABEL DOSPUNTOS' 
@@ -312,6 +315,13 @@ def p_etiqueta(t):
     senteList.append(conNode+2)
     conNode += 2
     #endregion
+
+def p_instrucciones_error(t):
+    '''INSTRUCCIONES    : PRINT PARIZQ error PARDER PUNTOCOMA
+                        | IF PARIZQ error PARDER GOTO LABEL PUNTOCOMA
+                        | UNSET PARIZQ error PARDER PUNTOCOMA
+                        | EXIT error PUNTOCOMA
+                        | GOTO error  PUNTOCOMA'''
 
 def p_instrucciones(t):
     '''INSTRUCCIONES    : PRINT PARIZQ EXPRESION PARDER PUNTOCOMA
@@ -423,6 +433,13 @@ def p_declaraciones(t):
     senteList.append(conNode+2)
     conNode +=3
     #endregion
+
+def p_array1_error(t):
+    'ARRAY_    :  error IGUAL EXPRESION PUNTOCOMA'
+
+def p_array_error(t):
+    '''ARRAY_    :  CORCHETES IGUAL error PUNTOCOMA
+                | IGUAL error PUNTOCOMA'''
 
 def p_array(t):
     '''ARRAY_    :  CORCHETES IGUAL EXPRESION PUNTOCOMA
@@ -563,6 +580,13 @@ def p_expresion_ope(t):
     senteList[:] = []
     conNode += 1
     #endregion
+
+def p_operacion_error(t):
+    '''OPERACION    : F error F
+                    | MENOS error
+                    | NOTLOGICA error
+                    | NOTBIT error
+                    | ANDBIT error'''
 
 def p_operacion(t):
     '''OPERACION    : F OPERADOR F
