@@ -258,61 +258,71 @@ def Print(instruction, ts, printList,f):
 
 def Declaration_(instruction, ts,f): 
     #print(str(instruction))
-    global la, co
-    la = instruction.line
-    co = instruction.column
+    try:
+        global la, co
+        la = instruction.line
+        co = instruction.column
 
-    val = valueExpression(instruction.val, ts)
-    if val == '#':
-        seob = seOb(f'Error Semantico: No se pudo declarar {instruction.id}.', instruction.line, instruction.column)
-        semanticErrorList.append(seob)
-        return
-    if val != 'array':
-        type_ = getType(val)
-        sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
-        if isinstance(instruction.val, ReferenceBit):
-            if isinstance(instruction.val.expression, Identifier):
-                sym.referencia = instruction.val.expression.id
-            #elif isinstance(instruction.val.expression, IdentifierArray):
-                #sym.referencia = instruction.val.expression.id
-        if ts.exist(instruction.id) != 1:
-            ts.add(sym)
+        val = valueExpression(instruction.val, ts)
+        if val == '#':
+            seob = seOb(f'Error Semantico: No se pudo declarar {instruction.id}.', instruction.line, instruction.column)
+            semanticErrorList.append(seob)
+            return
+        if val != 'array':
+            type_ = getType(val)
+            sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
+            if isinstance(instruction.val, ReferenceBit):
+                if isinstance(instruction.val.expression, Identifier):
+                    sym.referencia = instruction.val.expression.id
+                #elif isinstance(instruction.val.expression, IdentifierArray):
+                    #sym.referencia = instruction.val.expression.id
+            if ts.exist(instruction.id) != 1:
+                ts.add(sym)
+            else:
+                ts.update(sym)
+
+            if sym.id[1] == 'a': #params, update label to procediment
+                currentParams.append(sym.id)
+                ts.updateFunction(currentAmbit, TS.TypeData.PROCEDIMIENTO)
+            elif sym.id[1] == 'v':
+                #update label to function
+                ts.updateFunction(currentAmbit, TS.TypeData.FUNCION)
         else:
-            ts.update(sym)
+            #print(instruction.id)
+            valor = {}
+            if ts.exist(instruction.id) == 1:
+                valor = ts.get(instruction.id).valor
 
-        if sym.id[1] == 'a': #params, update label to procediment
-            currentParams.append(sym.id)
-            ts.updateFunction(currentAmbit, TS.TypeData.PROCEDIMIENTO)
-        elif sym.id[1] == 'v':
-            #update label to function
-            ts.updateFunction(currentAmbit, TS.TypeData.FUNCION)
-    else:
-        print(instruction.id)
-        valor = {}
-        if ts.exist(instruction.id) == 1: 
-            valor = ts.get(instruction.id).valor       
+            if isinstance(instruction.val, ExpressionsDeclarationArray):
+                valor = valueArray(instruction.id, instruction.val, ts, valor)
 
-        if isinstance(instruction.val, ExpressionsDeclarationArray):
-            valor = valueArray(instruction.id, instruction.val, ts, valor)
-                    
-        type_ = TS.TypeData.ARRAY
-        listaKeys = valor.values()
-        sym = TS.Symbol(instruction.id, type_, valor, currentAmbit, 0, len(listaKeys))
-        #valueArray(sym, instruction.val, ts)        
-        if ts.exist(instruction.id) != 1: 
-            ts.add(sym)
-        else:
-            ts.update(sym)       
+            if isinstance(valor, str):
 
-        #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
-    
-    global contador
-    f.write("n003 -- n00"+str(contador)+";\n")
-    f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
-    contador += 1
+                type_ = TS.TypeData.STRING
+                listaKeys = []
+            else:
+                type_ = TS.TypeData.ARRAY
+                listaKeys = valor.values()
 
-    #validar las referencias 
-    UpdateReferences(instruction.id, val, ts)
+            sym = TS.Symbol(instruction.id, type_, valor, currentAmbit, 0, len(listaKeys))
+            #valueArray(sym, instruction.val, ts)
+            if ts.exist(instruction.id) != 1:
+                ts.add(sym)
+            else:
+                ts.update(sym)
+
+            #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
+
+        global contador
+        f.write("n003 -- n00"+str(contador)+";\n")
+        f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
+        contador += 1
+
+        #validar las referencias
+        UpdateReferences(instruction.id, val, ts)
+    except:
+        print("error en la declaracion de variable")
+
 
 def UpdateReferences(idReferencia, val,ts):
     #print("Actualizando las referencias.")
@@ -337,60 +347,98 @@ def valueString(expression, ts):
     else: return str(valueExpression(expression, ts))
 
 def valueArray(id, instruction, ts, valor):
-    #VALIDAR QUE NO SOBREESCRIBA CADA DICCIONARIO
-    dictionary = '{\n'
-    i = 0
-    if len(instruction.expressionIzq) == 1:
-        dictionary += '}'
-    else:
-        while i < len(instruction.expressionIzq)-1:
-            val = valueExpression(instruction.expressionIzq[i],ts)
-            if isinstance(val, str):
-                dictionary += '\''+val+'\''
+    # VALIDAR QUE NO SOBREESCRIBA CADA DICCIONARIO
+    # el valor corresponde a la variable que queremos modificar entonces si es str solo podra tener una dimension de ambos lados
+    if isinstance(valor, str):
+        print("asignacion de una posicion a un string")
+        if len(instruction.expressionIzq) == 1:
+            indice = valueExpression(instruction.expressionIzq[0], ts)
+            tmp = list(valor)
+            if indice > len(tmp):
+                # rellenar con espacios
+                for i in range(0, (indice - (len(tmp) - 1))):
+                    tmp.append(" ")
+                tmp[indice] = valueExpression(instruction.expressionDer, ts)
             else:
-                dictionary += str(val)
-            dictionary += ': {'
-            i += 1        
-        o = 0
-        while o < len(instruction.expressionIzq)-2:
+                tmp[indice] = valueExpression(instruction.expressionDer, ts)
+            tmp = "".join(tmp)
+            valor = tmp
+            return tmp
+        else:
+            se = seOb(f'Error: indice fuera de rango.', instruction.line, instruction.column)
+            semanticErrorList.append(se)
+            return valor
+    else:
+        dictionary = '{\n'
+        i = 0
+        if len(instruction.expressionIzq) == 1:
             dictionary += '}'
-            o += 1
-        dictionary += '}\n}'
+        else:
+            while i < len(instruction.expressionIzq) - 1:
+                val = valueExpression(instruction.expressionIzq[i], ts)
+                if isinstance(val, str):
+                    dictionary += '\'' + val + '\''
+                else:
+                    dictionary += str(val)
+                dictionary += ': {'
+                i += 1
+            o = 0
+            while o < len(instruction.expressionIzq) - 2:
+                dictionary += '}'
+                o += 1
+            dictionary += '}\n}'
 
-    d = ast.literal_eval(dictionary)    
-    #print("valor actual: "+ str(valor))
-    #print("valor a adjuntar: "+ str(d))
-    size = len(instruction.expressionIzq)
-    val = d
-    i = 0
-    #print(str(val))
-    auxaux = {**valor}
-    while i < len(instruction.expressionIzq)-1:
-        valaux = auxaux.setdefault(valueExpression(instruction.expressionIzq[i], ts))
-        if valaux != None:
-            # verifico que no sea un entero
-            #l------
-            #-------
-            #-------
-            if isinstance(valaux, int) or isinstance(valaux, float):  #string caso especial de concatenacion
-                
-                se = seOb(f'Error: Posisicon ya esta ocupada.', instruction.line, instruction.column)
-                semanticErrorList.append(se)
-                return valor
-            elif isinstance(valaux, str):    #retorno el mismo valor
-                print("es string ");
-                return valor
-            #--------
-            #-------
-            #-------
-        val = val.setdefault(valueExpression(instruction.expressionIzq[i], ts))
-        i +=1
-    #print(str(val))
-    val1 = val.setdefault(valueExpression(instruction.expressionIzq[size-1],ts), valueExpression( instruction.expressionDer,ts))
-    
-    d = update(copy.deepcopy(valor), d)
-    #print(str(d))
-    return d
+        d = ast.literal_eval(dictionary)
+        # print("valor actual: "+ str(valor))
+        # print("valor a adjuntar: "+ str(d))
+        size = len(instruction.expressionIzq)
+        val = d
+        i = 0
+        # print(str(val))
+        auxaux = {**valor}
+        while i < len(instruction.expressionIzq) - 1:
+            valaux = auxaux.setdefault(valueExpression(instruction.expressionIzq[i], ts))
+            if valaux != None:
+                # verifico que no sea un entero
+                # -------
+                # -------
+                if isinstance(valaux, int) or isinstance(valaux, float):  # string caso especial de concatenacion
+                    se = seOb(f'Error: Posisicon ya esta ocupada.', instruction.line, instruction.column)
+                    semanticErrorList.append(se)
+                    return valor
+                elif isinstance(valaux, str):  # retorno el mismo valor
+                    print("es string ");
+                    print("asignacion de una posicion a un string")
+                    #t[0]['nombre'][4]  -> i se encuantra en 'nombre'
+                    if len(instruction.expressionIzq) == i+2:
+                        #t[0]['nombre'][4] -> i+1 seria 4
+                        indice = valueExpression(instruction.expressionIzq[i+1], ts)
+                        tmp = list(valaux)
+                        if indice > len(tmp)-1:
+                            # rellenar con espacios
+                            for j in range(0, (indice - (len(tmp) - 1))):
+                                tmp.append(" ")
+                            tmp[indice] = valueExpression(instruction.expressionDer, ts)
+                        else:
+                            tmp[indice] = valueExpression(instruction.expressionDer, ts)
+                        tmp = "".join(tmp)
+                        #actualizar valor del diccionario
+                        a = {valueExpression(instruction.expressionIzq[i], ts): tmp}
+                        d = update(copy.deepcopy(valor), a)
+                        return d
+                    else:
+                        se = seOb(f'Error: indice fuera de rango.', instruction.line, instruction.column)
+                        semanticErrorList.append(se)
+                        return valor
+                # --------
+                # -------
+            val = val.setdefault(valueExpression(instruction.expressionIzq[i], ts))
+            i += 1
+        val1 = val.setdefault(valueExpression(instruction.expressionIzq[size - 1], ts),
+                              valueExpression(instruction.expressionDer, ts))
+
+        d = update(copy.deepcopy(valor), d)
+        return d
 
 def update(d1, d2):
     try:
@@ -522,9 +570,20 @@ def valueExpression(instruction, ts):
         try:
             sym = ts.get(instruction.id).valor
             if isinstance(sym, str):
+                #print("es string")
                 #es un string pero con posiciones
-                print("estas tratando de acceder a un arreglo")
+                if len(instruction.expressions) > 1:
+                    #es decir que trar mas de un indice es decir  $t1[0][4]
+                    #lo cual es error en un string 
+                    #print(f"tamaño: {len(instruction.expressions)}")
+                    se = seOb(f'Error: Indice {sym} del arreglo no existe.', instruction.line, instruction.column)
+                    semanticErrorList.append(se)
+                    return '#'
+                else:
+                    #print(f"valor del indice: {str(sym[valueExpression(instruction.expressions[0], ts)])}")
+                    return sym[valueExpression(instruction.expressions[0], ts)]
             else:
+                #print("no es  string")
                 #manejo normal de array
                 d = ast.literal_eval(str(sym))
                 tmp = d
