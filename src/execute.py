@@ -6,12 +6,12 @@ from instructions import *
 import ast
 import copy
 import collections
+import generator as g
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 
 contador = 4  #for grapho 
-
 currentAmbit = 'main'   #current ambit
 currentParams = []  #list of parameters that the current function will have
 semanticErrorList = []
@@ -34,7 +34,15 @@ def execute(input):
     printList = []
     printList[:] = []
     semanticErrorList[:] = []
-    process(input,tsGlobal, printList)
+
+    node = g.node(contador, contador, 'S')
+    ge = g.genera()
+    ge.add(node)
+    node = g.node(contador, contador+1, 'A')
+    ge.add(node)
+    contador+=1
+    process(input,tsGlobal, printList, ge, contador)
+
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
         print(str(i) + ", "+ str(tsGlobal.get(i).valor) + ", "+ str(tsGlobal.get(i).tipo)+ ", "+ str(tsGlobal.get(i).declarada) + ", " + str(tsGlobal.get(i).parametros))
@@ -50,7 +58,6 @@ def executeDebug(input):
     currentAmbit = 'main'  # current ambit
     currentParams[:] = []  # list of parameters that the current function will have
     semanticErrorList[:] = []
-
     tsGlobal = {}
     tsGlobal = TS.SymbolTableDebug()
     printList = []
@@ -65,17 +72,33 @@ def executeDebug(input):
 
     return printList
 
-def process(instructions, ts, printList):
-    global currentAmbit, pasadas, currentParams, contador
+def process(instructions, ts, printList, ge, padre):
+    global currentAmbit, pasadas, currentParams, contador    
+       
     try:
         i = 0
         while i < len(instructions):
             #isinstance verificar tipos 
             b = instructions[i]      
             if isinstance(b, Print_):
-                Print(b,ts, printList)
+                node = g.node(padre, contador+1, 'INSTRUCCION')
+                ge.add(node)
+                contador += 1
+                padreLocalprint = contador
+                node = g.node(padreLocalprint, contador+1, 'PRINT')
+                ge.add(node)
+                node = g.node(contador+1, contador+2, 'print')
+                ge.add(node)
+                contador += 2
+                
+                Print(b,ts, printList,ge,padreLocalprint+1)
             elif isinstance(b, Declaration):
-                Declaration_(b, ts)
+                node = g.node(padre, contador+1, 'DECLARACION')
+                ge.add(node)
+                contador += 1
+                padreLocaldecla = contador
+
+                Declaration_(b, ts,ge, padreLocaldecla)
             elif isinstance(b, If):
                 result = valueExpression(b.expression, ts)
                 if result == 1:
@@ -138,9 +161,9 @@ def process(instructions, ts, printList):
             i += 1
     except:
         if isinstance(instructions, Print_):
-            Print(instructions,ts, printList)
+            Print(instructions,ts, printList,ge,padre)
         elif isinstance(instructions, Declaration):
-            Declaration_(instructions, ts)
+            Declaration_(instructions, ts,ge,padre)
         elif isinstance(instructions, If):
             result = valueExpression(instructions.expression, ts)
             if result == 1:
@@ -217,12 +240,17 @@ def goto(i, instructions, label):
     i = goto(0, instructions, label)
     return i
 
-def Print(instruction, ts, printList):
+def Print(instruction, ts, printList,ge, padre):
     #add to .dot
     global contador
     var = valueString(instruction.cadena, ts)
     if var != '#':
         if var != None:
+            
+            node = g.node(padre, contador+1, str(var))
+            ge.add(node)
+            contador+=1
+            
             printList.append(var)
         else:
             seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
@@ -231,10 +259,10 @@ def Print(instruction, ts, printList):
         seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
         semanticErrorList.append(seob)
 
-def Declaration_(instruction, ts): 
+def Declaration_(instruction, ts,ge, padre): 
     #print(str(instruction))
     try:
-        global la, co
+        global la, co,contador
         la = instruction.line
         co = instruction.column
 
@@ -244,6 +272,15 @@ def Declaration_(instruction, ts):
             semanticErrorList.append(seob)
             return
         if val != 'array':
+
+            node = g.node(padre, contador+1, str(instruction.id))
+            ge.add(node)
+            node = g.node(padre, contador+2, '=')
+            ge.add(node)
+            node = g.node(padre, contador+3, str(val))
+            ge.add(node)
+            contador += 3
+
             type_ = getType(val)
             sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
             if isinstance(instruction.val, ReferenceBit):

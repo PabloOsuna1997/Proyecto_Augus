@@ -1,4 +1,6 @@
-main: 
+main:
+$t1 = array();
+$t1[0] = 2;
     $a0 = 5; 
     goto f1; 
 ret0: 
@@ -12,42 +14,4 @@ ret1:
     goto ret0; 
 f2: 
     $v1 = $a1*$a1; 
-    goto ret1;
-
-----------------------------------------------------
-main: 
-    $t1 = 0; 
-    $t2 = 0; 
-while: 
-    if ($t1>=4) goto end; 
-    $t2 = $t2 + $t1; #6
-    $t1 = $t1 + 1;  #4
-    goto while; 
-end: 
-    print($t2);
-
----------------------------------------------------
-
-main: 
-    $a0 = 3; 
-    $t0 = 0;
-    goto fact; 
-ret0: 
-    print($v0); 
-    exit; 
-fact: 
-    if ($a0>1) goto sino; 
-    $v0 = 1; 
-    if ($t0 == 0) goto ret0; 
-    $t0 = $t0 - 1; 
-    goto ret1; 
-sino: 
-    $a0 = $a0 - 1; 
-    $t0 = $t0 + 1; #level ++ 
-    goto fact; 
-ret1: 
-    $a0 = $a0 + 1; 
-    $v0 = $a0 * $v0; 
-    if ($t0==0) goto ret0; 
-    $t0 = $t0 - 1; 
     goto ret1;

@@ -252,11 +252,12 @@ class Ui_Augus(object):
     def fn_repAST(self):
         try:
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-            os.system('dot -Tpng ../reports/ast.dot -o ../reports/ast.png')
-
-            ruta = ("../reports/ast.png")
-            im = Image.open(ruta)
-            im.show()
+            #os.system('dot -Tpng  ../reports/ast.dot  -o  ../reports/ast.png')
+            os.system('dot -Tsvg  ../reports/ast.dot  -o  ../reports/ast.svg')
+            os.startfile('..\\reports\\ast.svg')
+            #ruta = ("../reports/ast.png")
+            #im = Image.open(ruta)
+            #im.show()
         except:
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Error al crear reporte.")
