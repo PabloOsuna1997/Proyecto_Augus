@@ -1,4 +1,4 @@
-<?php
+main:
   $s0 = array(); #stack
   $sp = -1; #null pointer
   $a0 = 2; #m

@@ -456,6 +456,7 @@ class Ui_Augus(object):
             execute.la = 0
             execute.co = 0 
             execute.pasadas = 0
+            self.textDebug.setPlainText("")
             tsDebug = {}
             printListDebug[:] = []
             instructionsDebug[:] = []
@@ -527,6 +528,7 @@ class Ui_Augus(object):
             execute.la = 0
             execute.co = 0 
             execute.pasadas = 0
+            self.textDebug.setPlainText("")
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()

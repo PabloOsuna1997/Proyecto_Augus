@@ -10,7 +10,8 @@ import collections
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 
-contador = 4  #for grapho   
+contador = 4  #for grapho 
+
 currentAmbit = 'main'   #current ambit
 currentParams = []  #list of parameters that the current function will have
 semanticErrorList = []
@@ -28,20 +29,12 @@ def execute(input):
     currentAmbit = 'main'   #current ambit
     currentParams[:] = []  #list of parameters that the current function will have
     semanticErrorList[:] = []
-
-    f = open("../reports/graph.dot","a")
-    f.write("n000 ;\n")
-    f.write("n000 [label=\"Inicio\"] ;\n")
-    f.write("n000 -- n001;\n")
-    f.write("n001 [label=\"Instrucciones\"] ;\n")
-
     tsGlobal = {}
     tsGlobal = TS.SymbolTable()
     printList = []
     printList[:] = []
     semanticErrorList[:] = []
-    process(input,tsGlobal, printList,f)
-    f.close()
+    process(input,tsGlobal, printList)
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
         print(str(i) + ", "+ str(tsGlobal.get(i).valor) + ", "+ str(tsGlobal.get(i).tipo)+ ", "+ str(tsGlobal.get(i).declarada) + ", " + str(tsGlobal.get(i).parametros))
@@ -58,19 +51,12 @@ def executeDebug(input):
     currentParams[:] = []  # list of parameters that the current function will have
     semanticErrorList[:] = []
 
-    f = open("../reports/graph.dot", "a")
-    f.write("n000 ;\n")
-    f.write("n000 [label=\"Inicio\"] ;\n")
-    f.write("n000 -- n001;\n")
-    f.write("n001 [label=\"Instrucciones\"] ;\n")
-
     tsGlobal = {}
     tsGlobal = TS.SymbolTableDebug()
     printList = []
     printList[:] = []
     #semanticErrorList[:] = []
-    process(input, tsGlobal, printList, f)
-    f.close()
+    process(input, tsGlobal, printList)
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
         val = tsGlobal.get(i)
@@ -79,21 +65,17 @@ def executeDebug(input):
 
     return printList
 
-def process(instructions, ts, printList,f):
-    global currentAmbit, pasadas, currentParams
+def process(instructions, ts, printList):
+    global currentAmbit, pasadas, currentParams, contador
     try:
         i = 0
         while i < len(instructions):
             #isinstance verificar tipos 
             b = instructions[i]      
             if isinstance(b, Print_):
-                f.write("n001 -- n002;\n")
-                f.write("n002 [label=\"Print\"] ;\n")
-                Print(b,ts, printList,f)
+                Print(b,ts, printList)
             elif isinstance(b, Declaration):
-                f.write("n001 -- n003;\n")
-                f.write("n003 [label=\"Declaracion\"] ;\n")
-                Declaration_(b, ts,f)
+                Declaration_(b, ts)
             elif isinstance(b, If):
                 result = valueExpression(b.expression, ts)
                 if result == 1:
@@ -156,13 +138,9 @@ def process(instructions, ts, printList,f):
             i += 1
     except:
         if isinstance(instructions, Print_):
-            f.write("n001 -- n002;\n")
-            f.write("n002 [label=\"Print\"] ;\n")
-            Print(instructions,ts, printList,f)
+            Print(instructions,ts, printList)
         elif isinstance(instructions, Declaration):
-            f.write("n001 -- n003;\n")
-            f.write("n003 [label=\"Declaracion\"] ;\n")
-            Declaration_(instructions, ts,f)
+            Declaration_(instructions, ts)
         elif isinstance(instructions, If):
             result = valueExpression(instructions.expression, ts)
             if result == 1:
@@ -239,13 +217,10 @@ def goto(i, instructions, label):
     i = goto(0, instructions, label)
     return i
 
-def Print(instruction, ts, printList,f):
+def Print(instruction, ts, printList):
     #add to .dot
     global contador
     var = valueString(instruction.cadena, ts)
-    f.write("n002 -- n00"+str(contador)+";\n")
-    f.write("n00"+str(contador)+" [label=\""+ str(var)+"\"] ;\n")
-    contador += 1
     if var != '#':
         if var != None:
             printList.append(var)
@@ -256,7 +231,7 @@ def Print(instruction, ts, printList,f):
         seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
         semanticErrorList.append(seob)
 
-def Declaration_(instruction, ts,f): 
+def Declaration_(instruction, ts): 
     #print(str(instruction))
     try:
         global la, co
@@ -310,19 +285,11 @@ def Declaration_(instruction, ts,f):
                 ts.add(sym)
             else:
                 ts.update(sym)
-
             #print("var " + str(sym.id) + ": "+str(ts.get(instruction.id).valor))
-
-        global contador
-        f.write("n003 -- n00"+str(contador)+";\n")
-        f.write("n00"+str(contador)+" [label=\""+instruction.id +"= "+ str(val)+"\"] ;\n")
-        contador += 1
-
         #validar las referencias
         UpdateReferences(instruction.id, val, ts)
     except:
         print("error en la declaracion de variable")
-
 
 def UpdateReferences(idReferencia, val,ts):
     #print("Actualizando las referencias.")
