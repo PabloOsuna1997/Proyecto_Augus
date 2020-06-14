@@ -92,6 +92,10 @@ class Ui_Augus(object):
         self.actionReporteSemantico.setObjectName("actionReporteSemantico")
         self.actionReporteAST = QtWidgets.QAction(Augus)
         self.actionReporteAST.setObjectName("actionReporteAST")
+        self.actionReporteGramatical = QtWidgets.QAction(Augus)
+        self.actionReporteGramatical.setObjectName("actionReporteGramatical")
+        self.actionAST = QtWidgets.QAction(Augus)
+        self.actionAST.setObjectName("actionAST")
         self.actionReporteTS = QtWidgets.QAction(Augus)
         self.actionReporteTS.setObjectName("actionReporteTS")
         self.actionAbrir = QtWidgets.QAction(Augus)
@@ -126,7 +130,9 @@ class Ui_Augus(object):
         self.menuReportes.addAction(self.actionReporteLexico)
         self.menuReportes.addAction(self.actionReporteSintactico)
         self.menuReportes.addAction(self.actionReporteSemantico)
+        self.menuReportes.addAction(self.actionReporteGramatical)
         self.menuReportes.addAction(self.actionReporteAST)
+        self.menuReportes.addAction(self.actionAST)
         self.menuReportes.addAction(self.actionReporteTS)
         self.menuArchivo.addAction(self.actionAbrir)
         self.menuArchivo.addAction(self.actionGuardar)
@@ -166,7 +172,9 @@ class Ui_Augus(object):
         self.actionReporteLexico.triggered.connect(lambda : self.fn_repLexico())
         self.actionReporteSintactico.triggered.connect(lambda : self.fn_repSintactico())
         self.actionReporteSemantico.triggered.connect(lambda : self.fn_repSemantico())
+        self.actionReporteGramatical.triggered.connect(lambda : self.fn_repGramatical())
         self.actionReporteAST.triggered.connect(lambda : self.fn_repAST())
+        self.actionAST.triggered.connect(lambda : self.fn_repASTGeneral())
         self.actionReporteTS.triggered.connect(lambda : self.fn_repTS())
         self.pushButton.clicked.connect(lambda : self.fn_Next())
 
@@ -184,7 +192,9 @@ class Ui_Augus(object):
         self.actionReporteSintactico.setText(_translate("Augus", "Reporte Sintactico"))
         self.actionReporteSemantico.setText(_translate("Augus", "Reporte Semantico"))
         self.actionReporteTS.setText(_translate("Augus", "Reporte Tabla de Simbolos"))
-        self.actionReporteAST.setText(_translate("Augus", "Reporte AST"))
+        self.actionReporteAST.setText(_translate("Augus", "Reporte AST ascendente"))
+        self.actionReporteGramatical.setText(_translate("Augus", "Reporte Gramatical"))
+        self.actionAST.setText(_translate("Augus", "Reporte AST"))
         self.actionAbrir.setText(_translate("Augus", "Abrir"))
         self.actionGuardar.setText(_translate("Augus", "Guardar"))
         self.actionGuardar_Como.setText(_translate("Augus", "Guardar Como"))
@@ -249,6 +259,21 @@ class Ui_Augus(object):
         except:
             print("closing file dialog.")
 
+    def fn_repASTGeneral(self):
+        try:
+            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+            #os.system('dot -Tpng  ../reports/ast.dot  -o  ../reports/ast.png')
+            os.system('dot -Tsvg  ../reports/astG.dot  -o  ../reports/astG.svg')
+            os.startfile('..\\reports\\astG.svg')
+            #ruta = ("../reports/ast.png")
+            #im = Image.open(ruta)
+            #im.show()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Error al crear reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.exec()
+
     def fn_repAST(self):
         try:
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
@@ -298,6 +323,40 @@ class Ui_Augus(object):
             self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
             self.msgBox.exec()
 
+    def fn_repGramatical(self):
+        print("reporte gramatical")
+        try:
+            fgraph = open('../reports/gramaticalReport.dot','w+') #creamos el archivo
+            fgraph.write("digraph H { parent [ shape=plaintext label=< <table border=\'1\' cellborder=\'1\'>\n")                    
+            fgraph.write("<tr><td colspan=\"3\">REPORTE GRAMATICAL</td></tr>\n")
+            fgraph.write("<tr><td port=\'port_one\'>PRODUCCION</td><td port=\'port_two\'>REGLAS SEMANTICAS</td></tr>\n")
+            
+            for i in grammar.grammarList:
+                fgraph.write(f"<tr><td port=\'port_one\'>{str(i.production.replace('<', '&lt;').replace('>', '&gt;').replace('|', '<BR/>|').replace('<<','&lt&lt;').replace('>>','&gt&gt;'))}</td><td port=\'port_two\'>{str(i.rules)}</td></tr>\n")
+                        
+            fgraph.write("</table> >]; \n}")
+            fgraph.close()
+
+            os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+            os.system('dot -Tpng ../reports/gramaticalReport.dot -o ../reports/gramaticalReport.png')    
+
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Reporte creado.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            self.msgBox.exec()
+
+            ruta = ("../reports/gramaticalReport.png")
+            im = Image.open(ruta)
+            im.show()
+
+            grammar.grammarList[:] = []
+        except:
+            print("error")
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Error al crear el reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.exec()
+    
     def fn_repSemantico(self):
         print("reportando semantico")
         global dataSema
@@ -534,7 +593,7 @@ class Ui_Augus(object):
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
 
-            fgraph = open('../reports/graph.dot','w+') #creamos el archivo
+            fgraph = open('../reports/astG.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" {")
             fgraph.close()
             #endregion
@@ -602,7 +661,7 @@ class Ui_Augus(object):
             fgraph.flush() 
             fgraph.close()
 
-            fgraph = open('../reports/graph.dot','a') #agregamos al archivo '}'
+            fgraph = open('../reports/astG.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
             fgraph.flush()
             fgraph.close()
