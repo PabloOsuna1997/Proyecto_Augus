@@ -16,7 +16,6 @@ import SymbolTable as TS
 import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-#from PyQt5.QtGui import QColor
 
 contadorVentanas = 0
 data = []
@@ -31,6 +30,7 @@ instructionsDebug = []
 printPases = []
 conttadorIns = 0
 from semanticObject import *
+
 class Ui_Augus(object):
     
     def setupUi(self, Augus):        
@@ -124,6 +124,10 @@ class Ui_Augus(object):
         self.actionDebuguer.setObjectName("actionDebuguer")
         self.actionCambiar_color_de_fondo = QtWidgets.QAction(Augus)
         self.actionCambiar_color_de_fondo.setObjectName("actionCambiar_color_de_fondo")
+        self.actionLigth = QtWidgets.QAction(Augus)
+        self.actionLigth.setObjectName("actionLigth")
+        self.actionMat = QtWidgets.QAction(Augus)
+        self.actionMat.setObjectName("actionMat")
         self.actionAyuda = QtWidgets.QAction(Augus)
         self.actionAyuda.setObjectName("actionAyuda")
         self.menuArchivo.addAction(self.actionNuevo)
@@ -147,6 +151,8 @@ class Ui_Augus(object):
         self.menuEjecutar.addAction(self.actionDescendente)
         self.menuEjecutar.addAction(self.actionDebuguer)
         self.menuOpciones.addAction(self.actionCambiar_color_de_fondo)
+        self.menuOpciones.addAction(self.actionLigth)
+        self.menuOpciones.addAction(self.actionMat)
         self.menuAyuda.addAction(self.actionAyuda)
         self.menubar.addAction(self.menuArchivo.menuAction())
         self.menubar.addAction(self.menuEditar.menuAction())
@@ -177,6 +183,9 @@ class Ui_Augus(object):
         self.actionAST.triggered.connect(lambda : self.fn_repASTGeneral())
         self.actionReporteTS.triggered.connect(lambda : self.fn_repTS())
         self.pushButton.clicked.connect(lambda : self.fn_Next())
+        self.actionCambiar_color_de_fondo.triggered.connect(lambda : self.fn_cambiaColor())
+        self.actionLigth.triggered.connect(lambda : self.fn_cambiaColorLigth())
+        self.actionMat.triggered.connect(lambda : self.fn_cambiaColorMaterial())
 
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
@@ -207,9 +216,48 @@ class Ui_Augus(object):
         self.actionAscendente.setText(_translate("Augus", "Ascendente"))
         self.actionDescendente.setText(_translate("Augus","Descendente"))
         self.actionDebuguer.setText(_translate("Augus","Debuguer"))
-        self.actionCambiar_color_de_fondo.setText(_translate("Augus", "Cambiar color de fondo"))
+        self.actionCambiar_color_de_fondo.setText(_translate("Augus", "Tema Dark"))
+        self.actionLigth.setText(_translate("Augus", "Tema Light"))
+        self.actionMat.setText(_translate("Augus", "Tema Material"))
         self.actionAyuda.setText(_translate("Augus", "Ayuda"))
 
+    def fn_cambiaColorLigth(self):
+        self.textEdit.setStyleSheet('''background-color: rgb(255, 255, 255);
+                                    border-color: rgb(18, 18, 18);
+                                    color: rgb(0, 0, 0);
+                                    font: 12pt \"consolas\";
+                                    ''')
+        self.textEditConsole.setStyleSheet('''background-color: rgb(255, 255, 255);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(0, 0, 0);
+                                            font: 12pt \"consolas\";''')
+
+    def fn_cambiaColor(self):
+        self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(255, 255, 255);
+                                            font: 12pt \"consolas\";
+                                    ''')
+        self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(51, 252, 255);
+                                            font: 12pt \"consolas\";''')
+        '''self.color = QtGui.QColor()
+        self.textDebug.setStyleSheet('color: rgb(0, 255, 60);')
+        self.textEdit.setTextBackgroundColor(QtCore.Qt.white)
+        self.textEdit. setTextColor(QtCore.Qt.blue)'''
+
+    def fn_cambiaColorMaterial(self):
+        self.textEdit.setStyleSheet('''background-color: rgb(187, 183, 191);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(0, 34, 255);
+                                            font: 12pt \"consolas\";''')
+
+        self.textEditConsole.setStyleSheet('''background-color: rgb(187, 183, 191);
+                                            border-color: rgb(18, 18, 18);
+                                            color: rgb(119, 0, 255);
+                                            font: 12pt \"consolas\";''')
+    
     def fn_Nuevo(self):
         global contadorVentanas
         contadorVentanas += 1
@@ -345,11 +393,12 @@ class Ui_Augus(object):
             self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
             self.msgBox.exec()
 
+            grammar.grammarList[:] = []
+
             ruta = ("../reports/gramaticalReport.png")
             im = Image.open(ruta)
             im.show()
 
-            grammar.grammarList[:] = []
         except:
             print("error")
             self.msgBox = QtWidgets.QMessageBox()
