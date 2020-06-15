@@ -110,3 +110,6 @@ class SymbolTableDebug():
             return 1
         print(f"{id} not defiened.")
         return 0
+
+    def clearTable (self):
+        self.symbols.clear()

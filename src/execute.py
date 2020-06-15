@@ -57,13 +57,7 @@ def executeDebug(input):
     printList = []
     printList[:] = []
     #semanticErrorList[:] = []
-    node = g.node(contador, contador, 'S')
-    ge = g.genera()
-    ge.add(node)
-    node = g.node(contador, contador+1, 'A')
-    ge.add(node)
-    contador+=1
-    process(input, tsGlobal, printList,ge,contador)
+    process(input, tsGlobal, printList)
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
         val = tsGlobal.get(i)
@@ -1007,8 +1001,6 @@ def drawExpresiones(instruction, ge, padre, ts):
         contador +=1
 
         drawExpresiones(instruction.expressionDer, ge, padre, tsGlobal)
-        
-
     elif instruction == 'array': 
         node = g.node(padre, contador+1, f'array ( )')
         ge.add(node)

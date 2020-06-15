@@ -24,6 +24,7 @@ from expressions import *
 from instructions import *
 from semanticObject import *
 
+
 contadorVentanas = 0
 data = []
 dataS = []
@@ -526,7 +527,7 @@ class Ui_Augus(object):
             self.msgBox.exec()
 
     def fn_Next(self):
-        print("siguiente.")
+        #print("siguiente.")
         global tsDebug, printListDebug, instructionsDebug, conttadorIns, printPases
         #not exist errors
         # para debuguear debo ir mandando instruccion por instruccion
@@ -610,7 +611,10 @@ class Ui_Augus(object):
     def fn_Ejecutar_Debuguer(self):
         print("ejecutando debuguer")
         global tsDebug, printListDebug, instructionsDebug, conttadorIns, printPases
-        Augus.resize(1500, 616)
+        Augus.resize(1500, 616)        
+        #print(str(execute.tsGlobal.symbols))
+        ts = TS.SymbolTableDebug()
+        ts.symbols.clear()
         
         try:
             execute.contador = 4  #for grapho   
@@ -754,7 +758,8 @@ class Ui_Augus(object):
                     self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     self.msgBox.exec()
                 
-                else:                   
+                else:   
+                    Augus.setStyleSheet('QMainWindow{background-color: red; border: 1px solid black;}')                
                     dataSema = [("DESCRIPCION", "COLUMNA", "LINEA")]
                     for i in execute.semanticErrorList:
                         dataSema.append((str(i.description), str(i.column), str(i.line)))
