@@ -36,8 +36,9 @@ printListDebug = []
 instructionsDebug = []
 printPases = []
 conttadorIns = 0
+instructionsList = []
 
-class MyHighlighter(QtGui.QSyntaxHighlighter):
+class pintar(QtGui.QSyntaxHighlighter):
 
     expresiones = []
     expresiones.append((r"\d+(\.\d+)?", QtGui.QColor(198,209,101)))
@@ -50,17 +51,17 @@ class MyHighlighter(QtGui.QSyntaxHighlighter):
 
     def highlightBlock(self, text):
         formato = QtGui.QTextCharFormat()
-        for expresion in self.expresiones:
+        for i in self.expresiones:
             #print(expresion[0])
-            formato.setForeground(QtGui.QColor(expresion[1]))
-            patron = expresion[0]
-            expresionTemp = QtCore.QRegExp(patron)
-            indice = expresionTemp.indexIn(text,0)
+            formato.setForeground(QtGui.QColor(i[1]))
+            patron = i[0]
+            tmp = QtCore.QRegExp(patron)
+            indice = tmp.indexIn(text,0)
             while indice >= 0:
-                length = expresionTemp.matchedLength();
-                #print(f"er: {expresionTemp} lenght: {str(length)}")
+                length = tmp.matchedLength();
+                #print(f"er: {tmp} lenght: {str(length)}")
                 QtGui.QSyntaxHighlighter.setFormat(self, indice, length, formato)
-                indice = expresionTemp.indexIn(text,indice + length)
+                indice = tmp.indexIn(text,indice + length)
 
 class Ui_Augus(object):
     
@@ -312,7 +313,7 @@ class Ui_Augus(object):
                                             color: rgb(255, 255, 255);
                                             font: 12pt \"consolas\";''' )
         self.textEdit.setObjectName("textEdit")
-        self.pintar = MyHighlighter(self.textEdit.document())
+        self.pintar = pintar(self.textEdit.document())
         self.tabWidget.addTab(
             self.tab,"Tab "+ str(contadorVentanas)
         )
@@ -339,7 +340,7 @@ class Ui_Augus(object):
                                             color: rgb(255, 255, 255);
                                             font: 12pt \"consolas\";''' )
                 self.textEdit.setObjectName("textEdit")
-                self.pintar = MyHighlighter(self.textEdit.document())
+                self.pintar = pintar(self.textEdit.document())
                 self.textEdit.setPlainText(data)
                 self.tabWidget.addTab(
                     self.tab,path
@@ -352,7 +353,19 @@ class Ui_Augus(object):
             print("closing file dialog.")
 
     def fn_repASTGeneral(self):
-        try:
+        try:  
+            fgraph = open('../reports/astG.dot','w+') #creamos el archivo
+            fgraph.write("graph \"\" { node [shape=box];")
+            fgraph.close()
+
+            #llamar a metodo de dibujo en execute
+            global instructionsList
+            execute.grafo(instructionsList)
+
+            fgraph = open('../reports/astG.dot','a') #agregamos al archivo '}'
+            fgraph.write("}")
+            fgraph.flush()
+            fgraph.close()
             os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
             #os.system('dot -Tpng  ../reports/ast.dot  -o  ../reports/ast.png')
             os.system('dot -Tsvg  ../reports/astG.dot  -o  ../reports/astG.svg')
@@ -688,15 +701,13 @@ class Ui_Augus(object):
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
             fgraph.write("graph \"\"{ node [shape=box];\n")          
             fgraph.close()
-
-            fgraph = open('../reports/astG.dot','w+') #creamos el archivo
-            fgraph.write("graph \"\" {")
-            fgraph.close()
             #endregion
 
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             content += '\n'
             result = grammar.parse(content)
+            global instructionsList
+            instructionsList = result[:]
 
             # si exists errores lexicos o sintacticos traera una lista vacia            
             global data, dataS, dataSema, dataTs
@@ -757,11 +768,6 @@ class Ui_Augus(object):
             fgraph = open('../reports/ast.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
             fgraph.flush() 
-            fgraph.close()
-
-            fgraph = open('../reports/astG.dot','a') #agregamos al archivo '}'
-            fgraph.write("}")
-            fgraph.flush()
             fgraph.close()
           
             sys.stdout.flush()

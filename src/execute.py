@@ -35,13 +35,7 @@ def execute(input):
     printList[:] = []
     semanticErrorList[:] = []
 
-    node = g.node(contador, contador, 'S')
-    ge = g.genera()
-    ge.add(node)
-    node = g.node(contador, contador+1, 'A')
-    ge.add(node)
-    contador+=1
-    process(input,tsGlobal, printList, ge, contador)
+    process(input,tsGlobal, printList)
 
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
@@ -78,7 +72,7 @@ def executeDebug(input):
 
     return printList
 
-def process(instructions, ts, printList, ge, padre):
+def process(instructions, ts, printList):
     global currentAmbit, pasadas, currentParams, contador    
        
     try:
@@ -86,25 +80,10 @@ def process(instructions, ts, printList, ge, padre):
         while i < len(instructions):
             #isinstance verificar tipos 
             b = instructions[i]      
-            if isinstance(b, Print_):
-                node = g.node(padre, contador+1, 'INSTRUCCION')
-                ge.add(node)
-                contador += 1
-                padreLocalprint = contador
-                node = g.node(padreLocalprint, contador+1, 'PRINT')
-                ge.add(node)
-                node = g.node(contador+1, contador+2, 'print')
-                ge.add(node)
-                contador += 2
-                
-                Print(b,ts, printList,ge,padreLocalprint+1)
+            if isinstance(b, Print_):                
+                Print(b,ts, printList)
             elif isinstance(b, Declaration):
-                node = g.node(padre, contador+1, 'DECLARACION')
-                ge.add(node)
-                contador += 1
-                padreLocaldecla = contador
-
-                Declaration_(b, ts,ge, padreLocaldecla)
+                Declaration_(b, ts)
             elif isinstance(b, If):
                 result = valueExpression(b.expression, ts)
                 if result == 1:
@@ -167,9 +146,9 @@ def process(instructions, ts, printList, ge, padre):
             i += 1
     except:
         if isinstance(instructions, Print_):
-            Print(instructions,ts, printList,ge,padre)
+            Print(instructions,ts, printList)
         elif isinstance(instructions, Declaration):
-            Declaration_(instructions, ts,ge,padre)
+            Declaration_(instructions, ts)
         elif isinstance(instructions, If):
             result = valueExpression(instructions.expression, ts)
             if result == 1:
@@ -246,17 +225,13 @@ def goto(i, instructions, label):
     i = goto(0, instructions, label)
     return i
 
-def Print(instruction, ts, printList,ge, padre):
+def Print(instruction, ts, printList):
     #add to .dot
     global contador
     var = valueString(instruction.cadena, ts)
+
     if var != '#':
-        if var != None:
-            
-            node = g.node(padre, contador+1, str(var))
-            ge.add(node)
-            contador+=1
-            
+        if var != None:            
             printList.append(var)
         else:
             seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
@@ -265,7 +240,7 @@ def Print(instruction, ts, printList,ge, padre):
         seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
         semanticErrorList.append(seob)
 
-def Declaration_(instruction, ts,ge, padre): 
+def Declaration_(instruction, ts): 
     #print(str(instruction))
     try:
         global la, co,contador
@@ -278,15 +253,6 @@ def Declaration_(instruction, ts,ge, padre):
             semanticErrorList.append(seob)
             return
         if val != 'array':
-
-            node = g.node(padre, contador+1, str(instruction.id))
-            ge.add(node)
-            node = g.node(padre, contador+2, '=')
-            ge.add(node)
-            node = g.node(padre, contador+3, str(val))
-            ge.add(node)
-            contador += 3
-
             type_ = getType(val)
             sym = TS.Symbol(instruction.id, type_, val, currentAmbit)
             if isinstance(instruction.val, ReferenceBit):
@@ -578,6 +544,12 @@ def valueExpression(instruction, ts):
     elif instruction == 'array': return 'array'
     elif isinstance(instruction, IdentifierArray):
         try:
+
+            if ts.exist(instruction.id) == 0:
+                se = seOb(f'Error Semantico: Variable  {instruction.id} no existe.', instruction.line,
+                          instruction.column)
+                semanticErrorList.append(se)
+                return '#'
             sym = ts.get(instruction.id).valor
             if isinstance(sym, str):
                 #print("es string")
@@ -667,3 +639,471 @@ def valueExpression(instruction, ts):
             se = seOb(f'Error Referencia: variable {instruction.expression.id} no existe.', instruction.line, instruction.column)
             semanticErrorList.append(se)
             return '#'
+
+####---------------------draw
+def grafo(instructions):
+
+    global contador
+    node = g.node(contador, contador, 'S')
+    ge = g.genera()
+    ge.add(node)
+    node = g.node(contador, contador+1, 'A')
+    ge.add(node)
+    contador+=1
+    instrucciones(instructions, ge, contador);
+
+def instrucciones(instructions, ge, padre):
+    global  contador, tsGlobal
+ 
+    try:
+        i = 0
+        while i < len(instructions):
+            #isinstance verificar tipos 
+            b = instructions[i]      
+            if isinstance(b, Print_):                
+                node = g.node(padre, contador+1, 'INSTRUCIONES')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'PRINT')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'print')
+                ge.add(node)
+                node = g.node(contador, contador+2, 'EXPRESIONES')
+                ge.add(node)
+                contador+=2
+                drawExpresiones(b.cadena, ge, contador, tsGlobal)
+            elif isinstance(b, Declaration):
+                node = g.node(padre, contador+1, 'DECLARACIONES')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'ID')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, str(b.id))
+                ge.add(node)
+                contador+=1
+                node = g.node(contador-2, contador+1, 'EXPRESION')
+                ge.add(node)
+                contador += 1
+                drawExpresiones(b.val, ge, contador, tsGlobal)
+            elif isinstance(b, If):
+                node = g.node(padre, contador+1, 'INSTRUCIONES')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'if')
+                ge.add(node)
+                node = g.node(contador, contador+2, ' (  EXPRESION  )')
+                ge.add(node)
+                contador += 2
+                drawExpresiones(b.expression, ge, contador, tsGlobal)
+            elif isinstance(b, Goto):
+                node = g.node(padre, contador+1, 'INSTRUCIONES')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'goto')
+                ge.add(node)
+                node = g.node(contador, contador+2, str(b.label))
+                ge.add(node)
+                contador += 2
+            elif isinstance(b, Exit):
+                node = g.node(padre, contador+1, 'INSTRUCIONES')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'exit ( )')
+                ge.add(node)
+                contador+=1
+                break
+            elif isinstance(b, Unset):
+                node = g.node(padre, contador+1, 'INSTRUCIONES')
+                ge.add(node)
+                contador+=1
+                node = g.node(contador, contador+1, 'unset ')
+                ge.add(node)
+                node = g.node(contador, contador+2, str(b.id))
+                ge.add(node)
+                contador+=2
+
+            i += 1
+    except:
+        if isinstance(instructions, Print_):
+            Print(instructions,ts, printList)
+        elif isinstance(instructions, Declaration):
+            Declaration_(instructions, ts)
+        elif isinstance(instructions, If):
+            result = valueExpression(instructions.expression, ts)
+            if result == 1:
+                tmp = i
+                i = goto(i+1, instructions, instructions.label)
+                if i != 0:
+                    pasadas = 0
+                        #print("realizando salto a: "+ str(b.label))
+                else:
+                    i = tmp
+                    #print("error semantico, etiqueta no existe")
+                    se = seOb(f"Error: etiqueta {instructions.label} no existe", instructions.line, instructions.column)
+                    semanticErrorList.append(se)
+            elif result == '#':
+                se = seOb(f"Error: Condicion no valida", instructions.line, instructions.column)
+                semanticErrorList.append(se)
+        elif isinstance(instructions, Goto):
+            #seteamos la instruccion anterior como la llamada al goto
+            tmp = i
+            i = goto(i, instructions, instructions.label)
+            if i != 0:
+                pasadas = 0
+                #print("realizando salto a: "+ str(b.label))
+            else:
+                i = tmp
+                #print("error semantico, etiqueta no existe")
+                se = seOb(f"Error: etiqueta {instructions.label} no existe", instructions.line, instructions.column)
+                semanticErrorList.append(se)
+        elif isinstance(instructions, Label):
+            #insert to symbols table
+            #type_ = 0
+            if len(currentParams) > 0:
+                #procedimiento tipo 7, cambiara a funcion si lee un $Vn
+                if ts.exist(instructions.label) == 1:
+                    #print("exists: "+ str(b.label))
+                    type_ = ts.get(instructions.label).tipo
+                else:
+                    type_ = TS.TypeData.PROCEDIMIENTO
+            else:
+                type_= TS.TypeData.CONTROL
+
+            #print("antes de insertar funcion: " + str(currentParams))
+            symbol = TS.Symbol(instructions.label, type_, 0, currentAmbit, currentParams.copy())
+            currentParams[:] = [] #clean to current Params    
+            #print("despues de insertar funcion: " + str(symbol.parametros))
+            if ts.exist(symbol.id) != 1:
+                ts.add(symbol)
+            else:
+                ts.update(symbol)
+            currentAmbit = instructions.label
+        elif isinstance(instructions, Exit):
+            return
+        elif isinstance(instructions, Unset):
+            if ts.delete(instructions.id) == 1:
+                print('variable eliminada.')
+            else:
+                se = seOb(f'Error Semantico: No se pudo eliminar {b.id}, en funcion unset.', b.line, b.column)
+                semanticErrorList.append(se)
+
+def drawExpresiones(instruction, ge, padre, ts):
+    global contador
+    #print(f'ahshas: {str(instruction)}') 
+    if isinstance(instruction, BinaryExpression):
+        num1 = valueExpression(instruction.op1, ts)
+        num2 = valueExpression(instruction.op2, ts)
+        try:
+            if instruction.operator == Aritmetics.MAS: 
+               node = g.node(padre, contador+1, str(num1))
+               ge.add(node)
+               node = g.node(padre, contador+2, '+')
+               ge.add(node)
+               node = g.node(padre, contador+3, str(num2))
+               ge.add(node)
+               contador +=3
+            elif instruction.operator == Aritmetics.MENOS:
+                node = g.node(padre, contador+1, str(num1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '-')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(num2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == Aritmetics.POR:
+                node = g.node(padre, contador+1, str(num1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '*')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(num2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == Aritmetics.DIV: 
+                node = g.node(padre, contador+1, str(num1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '/')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(num2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == Aritmetics.MODULO:
+                node = g.node(padre, contador+1, str(num1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '%')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(num2))
+                ge.add(node)
+                contador +=1
+        except:
+            pass
+    elif isinstance(instruction, LogicAndRelational):
+        val1 = valueExpression(instruction.op1, ts)
+        val2 = valueExpression(instruction.op2, ts)
+        try:
+            if instruction.operator == LogicsRelational.MAYORQUE: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '>')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.MENORQUE: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '<')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.MAYORIGUAL: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '>=')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.MENORIGUAL: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '<=')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.IGUALQUE: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '==')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.AND: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '&&')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.OR: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '||')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.XOR: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '^')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == LogicsRelational.DIFERENTE:
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '!=')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+        
+        except:
+            pass
+    elif isinstance(instruction, Not):
+        try:
+            num1 = valueExpression(instruction.expression, ts)
+            node = g.node(padre, contador+1, str(val1))
+            ge.add(node)
+            contador +=1
+            node = g.node(padre, contador+1, '!')
+            ge.add(node)
+            contador +=1
+        except:
+            pass
+    elif isinstance(instruction, Abs):
+        try:
+            node = g.node(padre, contador+1, 'abs')
+            ge.add(node)
+            contador +=1
+            node = g.node(padre, contador+1, str(valueExpression(instruction.expression,ts)))
+            ge.add(node)
+            contador +=1
+        except:
+            pass
+    elif isinstance(instruction, NegativeNumber):
+        try:
+            num1 = valueExpression(instruction.expression, ts)
+            node = g.node(padre, contador+1, '-')
+            ge.add(node)
+            contador +=1
+            node = g.node(padre, contador+1, str(num1))
+            ge.add(node)
+            contador +=1
+        except:
+            pass
+    elif isinstance(instruction, Identifier):
+        node = g.node(padre, contador+1, str(instruction.id))
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, Number):
+        node = g.node(padre, contador+1, str(instruction.val))
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, Cast_):
+        num1 = valueExpression(instruction.expression,ts)
+
+        node = g.node(padre, contador+1, str(instruction.type))
+        ge.add(node)
+        contador +=1
+        node = g.node(padre, contador+1, str(num1))
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, String_):
+        node = g.node(padre, contador+1, str(instruction.string))
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, ExpressionsDeclarationArray):
+        #print(f'ahshas: {str(instruction.expressionDer)}') 
+        for i in instruction.expressionIzq:
+            node = g.node(padre, contador+1, f'[{str(valueExpression(i, ts))}]')
+            ge.add(node)
+            contador +=1
+        node = g.node(padre, contador+1, f'=')
+        ge.add(node)
+        contador +=1
+
+        drawExpresiones(instruction.expressionDer, ge, padre, tsGlobal)
+        
+
+    elif instruction == 'array': 
+        node = g.node(padre, contador+1, f'array ( )')
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, IdentifierArray):
+        try:
+            #print(str(instruction))
+            node = g.node(padre, contador+1, str(instruction.id))
+            ge.add(node)
+            contador +=1
+            sym = ts.get(instruction.id).valor            
+            i = 0
+            while i < len(instruction.expressions):
+                print(str(i))
+                node = g.node(padre, contador+1, f'[{str(valueExpression(instruction.expressions[i], ts))}]')
+                ge.add(node)
+                contador +=1
+                i += 1
+        except:
+            pass
+    elif isinstance(instruction, ReadConsole):
+        #lectura de consola
+        node = g.node(padre, contador+1, 'read ( ) ')
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, RelationalBit):
+        val1 = valueExpression(instruction.op1, ts)
+        val2 = valueExpression(instruction.op2, ts)        
+        try:
+            if instruction.operator == BitToBit.ANDBIT: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '&')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == BitToBit.ORBIT: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '|')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == BitToBit.XORBIT: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '^')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == BitToBit.SHIFTI: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '<<')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+            elif instruction.operator == BitToBit.SHIFTD: 
+                node = g.node(padre, contador+1, str(val1))
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, '>>')
+                ge.add(node)
+                contador +=1
+                node = g.node(padre, contador+1, str(val2))
+                ge.add(node)
+                contador +=1
+        except:
+            pass
+    elif isinstance(instruction, NotBit):
+        num1 = valueExpression(instruction.expression, ts)
+        node = g.node(padre, contador+1, '~')
+        ge.add(node)
+        contador +=1
+        node = g.node(padre, contador+1, str(num1))
+        ge.add(node)
+        contador +=1
+    elif isinstance(instruction, ReferenceBit):
+        val = valueExpression(instruction.expression, ts)
+        node = g.node(padre, contador+1, '&')
+        ge.add(node)
+        contador +=1
+        node = g.node(padre, contador+1, str(num1))
+        ge.add(node)
+        contador +=1
+
