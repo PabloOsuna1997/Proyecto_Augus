@@ -6,16 +6,23 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+import os
+import sys
+
 from PIL import Image
-import grammar
-import reportGenerator as rg
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 import execute
+import grammar
+import re
+import reportGenerator as rg
+import SymbolTable as TS
 from expressions import *
 from instructions import *
-import SymbolTable as TS
-import sys, os
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import *
+from semanticObject import *
 
 contadorVentanas = 0
 data = []
@@ -29,15 +36,41 @@ printListDebug = []
 instructionsDebug = []
 printPases = []
 conttadorIns = 0
-from semanticObject import *
+
+class MyHighlighter(QtGui.QSyntaxHighlighter):
+
+    expresiones = []
+    expresiones.append((r"\d+(\.\d+)?", QtGui.QColor(198,209,101)))
+    expresiones.append((r"\bmain", QtGui.QColor(152,81,164)))
+    expresiones.append((r"[a-zA-Z_][a-zA-Z_0-9]*", QtGui.QColor(161,81,164)))        
+    expresiones.append((r'\".+\"', QtGui.QColor(185,185,112)))
+    expresiones.append((r'\'.+\'', QtGui.QColor(185,185,112)))
+    expresiones.append((r"#.*", QtGui.QColor(68,146,92)))
+    expresiones.append((r"\$(t|a|v|ra|sp?)[0-9]*", QtGui.QColor(119,193,230)))
+
+    def highlightBlock(self, text):
+        formato = QtGui.QTextCharFormat()
+        for expresion in self.expresiones:
+            #print(expresion[0])
+            formato.setForeground(QtGui.QColor(expresion[1]))
+            patron = expresion[0]
+            expresionTemp = QtCore.QRegExp(patron)
+            indice = expresionTemp.indexIn(text,0)
+            while indice >= 0:
+                length = expresionTemp.matchedLength();
+                #print(f"er: {expresionTemp} lenght: {str(length)}")
+                QtGui.QSyntaxHighlighter.setFormat(self, indice, length, formato)
+                indice = expresionTemp.indexIn(text,indice + length)
 
 class Ui_Augus(object):
     
     def setupUi(self, Augus):        
         Augus.setObjectName("Augus")
         Augus.resize(980, 616)
+        Augus.setStyleSheet('QMainWindow{background-color: yellow; border: 1px solid black;}')
         self.centralwidget = QtWidgets.QWidget(Augus)
         self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setStyleSheet("background-color: rgb(33,33,33);");
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(20, 20, 471, 541))
         self.tabWidget.setObjectName("tabWidget")
@@ -222,41 +255,50 @@ class Ui_Augus(object):
         self.actionAyuda.setText(_translate("Augus", "Ayuda"))
 
     def fn_cambiaColorLigth(self):
-        self.textEdit.setStyleSheet('''background-color: rgb(255, 255, 255);
-                                    border-color: rgb(18, 18, 18);
-                                    color: rgb(0, 0, 0);
-                                    font: 12pt \"consolas\";
-                                    ''')
-        self.textEditConsole.setStyleSheet('''background-color: rgb(255, 255, 255);
-                                            border-color: rgb(18, 18, 18);
-                                            color: rgb(0, 0, 0);
-                                            font: 12pt \"consolas\";''')
+        try:
+            self.textEdit.setStyleSheet('''background-color: rgb(244, 245, 235);
+                                        border-color: rgb(18, 18, 18);
+                                        color: rgb(0, 0, 0);
+                                        font: 12pt \"consolas\";
+                                        ''')
+            self.textEditConsole.setStyleSheet('''background-color: rgb(244, 245, 235);
+                                                border-color: rgb(18, 18, 18);
+                                                color: rgb(0, 0, 0);
+                                                font: 12pt \"consolas\";''')
+
+            self.centralwidget.setStyleSheet("background-color: rgb(244,245,235);");
+        except:
+            pass
 
     def fn_cambiaColor(self):
-        self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
-                                            border-color: rgb(18, 18, 18);
-                                            color: rgb(255, 255, 255);
-                                            font: 12pt \"consolas\";
-                                    ''')
-        self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
-                                            border-color: rgb(18, 18, 18);
-                                            color: rgb(51, 252, 255);
-                                            font: 12pt \"consolas\";''')
-        '''self.color = QtGui.QColor()
-        self.textDebug.setStyleSheet('color: rgb(0, 255, 60);')
-        self.textEdit.setTextBackgroundColor(QtCore.Qt.white)
-        self.textEdit. setTextColor(QtCore.Qt.blue)'''
+        try:
+            self.textEdit.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                                border-color: rgb(18, 18, 18);
+                                                color: rgb(255, 255, 255);
+                                                font: 12pt \"consolas\";
+                                        ''')
+            self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
+                                                border-color: rgb(18, 18, 18);
+                                                color: rgb(51, 252, 255);
+                                                font: 12pt \"consolas\";''')
+            self.centralwidget.setStyleSheet("background-color: rgb(33,33,33);");
+        except:
+            pass
 
     def fn_cambiaColorMaterial(self):
-        self.textEdit.setStyleSheet('''background-color: rgb(187, 183, 191);
-                                            border-color: rgb(18, 18, 18);
-                                            color: rgb(0, 34, 255);
-                                            font: 12pt \"consolas\";''')
+        try:
+            self.textEdit.setStyleSheet('''background-color: rgb(159, 161, 159);
+                                                border-color: rgb(18, 18, 18);
+                                                color: rgb(0, 34, 255);
+                                                font: 12pt \"consolas\";''')
 
-        self.textEditConsole.setStyleSheet('''background-color: rgb(187, 183, 191);
-                                            border-color: rgb(18, 18, 18);
-                                            color: rgb(119, 0, 255);
-                                            font: 12pt \"consolas\";''')
+            self.textEditConsole.setStyleSheet('''background-color: rgb(159, 161, 159);
+                                                border-color: rgb(18, 18, 18);
+                                                color: rgb(119, 0, 255);
+                                                font: 12pt \"consolas\";''')
+            self.centralwidget.setStyleSheet("background-color: (159, 161, 159);");
+        except:
+            pass
     
     def fn_Nuevo(self):
         global contadorVentanas
@@ -270,6 +312,7 @@ class Ui_Augus(object):
                                             color: rgb(255, 255, 255);
                                             font: 12pt \"consolas\";''' )
         self.textEdit.setObjectName("textEdit")
+        self.pintar = MyHighlighter(self.textEdit.document())
         self.tabWidget.addTab(
             self.tab,"Tab "+ str(contadorVentanas)
         )
@@ -296,6 +339,7 @@ class Ui_Augus(object):
                                             color: rgb(255, 255, 255);
                                             font: 12pt \"consolas\";''' )
                 self.textEdit.setObjectName("textEdit")
+                self.pintar = MyHighlighter(self.textEdit.document())
                 self.textEdit.setPlainText(data)
                 self.tabWidget.addTab(
                     self.tab,path
@@ -590,6 +634,7 @@ class Ui_Augus(object):
             # si exists errores lexicos o sintacticos traera una lista vacia            
             global data, dataS, dataSema, dataTs
             if len(result) == 0:
+                Augus.setStyleSheet('QMainWindow{background-color: red; border: 1px solid black;}')
                 self.msgBox = QtWidgets.QMessageBox()
                 self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
                 self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
@@ -604,6 +649,8 @@ class Ui_Augus(object):
                     dataS = [("LEXEMA", "COLUMNA", "LINEA")]
                     for i in grammar.sintacticErroList:
                         dataS.append((str(i.lexema), str(i.column), str(i.line)))
+            else:
+                Augus.setStyleSheet('QMainWindow{background-color: green; border: 1px solid black;}')
              
             #region end to report
             fgraph = open('../reports/ast.dot','a') #agregamos al archivo '}'
@@ -654,6 +701,7 @@ class Ui_Augus(object):
             # si exists errores lexicos o sintacticos traera una lista vacia            
             global data, dataS, dataSema, dataTs
             if len(result) == 0:
+                Augus.setStyleSheet('QMainWindow{background-color: red; border: 1px solid black;}')
                 self.msgBox = QtWidgets.QMessageBox()
                 self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
                 self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
@@ -669,6 +717,7 @@ class Ui_Augus(object):
                     for i in grammar.sintacticErroList:
                         dataS.append((str(i.lexema), str(i.column), str(i.line)))
             else:
+                Augus.setStyleSheet('QMainWindow{background-color: green; border: 1px solid black;}')
                 #not exist errors                            
                 printList = execute.execute(result)
 

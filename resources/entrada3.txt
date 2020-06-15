@@ -1,6 +1,6 @@
 main:
-$t1 = array();
-$t1[0] = 2;
+    $t1 = array();
+    $t1[0] = 2;
     $a0 = 5; 
     goto f1; 
 ret0: 

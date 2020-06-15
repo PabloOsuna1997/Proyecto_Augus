@@ -63,7 +63,13 @@ def executeDebug(input):
     printList = []
     printList[:] = []
     #semanticErrorList[:] = []
-    process(input, tsGlobal, printList)
+    node = g.node(contador, contador, 'S')
+    ge = g.genera()
+    ge.add(node)
+    node = g.node(contador, contador+1, 'A')
+    ge.add(node)
+    contador+=1
+    process(input, tsGlobal, printList,ge,contador)
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
         val = tsGlobal.get(i)
