@@ -1,20 +1,5 @@
 digraph H { parent [ shape=plaintext label=< <table border='1' cellborder='1'>
 <tr><td colspan="3">REPORTE GRAMATICAL</td></tr>
 <tr><td port='port_one'>PRODUCCION</td><td port='port_two'>REGLAS SEMANTICAS</td></tr>
-<tr><td port='port_one'>S  -&gt; A</td><td port='port_two'>S.val = A.val</td></tr>
-<tr><td port='port_one'>A  -&gt; MAIN DOSPUNTOS SENTENCIAS</td><td port='port_two'>A.val = SENTENCIAS.val</td></tr>
-<tr><td port='port_one'>SENTENCIAS -&gt; SENTENCIA</td><td port='port_two'>SENTENCIA.val = SENTENCIA.val</td></tr>
-<tr><td port='port_one'>SENTENCIA -&gt; INSTRUCCIONES</td><td port='port_two'>SENTENCIA.val = INSTRUCCIONES.val</td></tr>
-<tr><td port='port_one'>INSTRUCCIONES -&gt; PRINT ( EXPRESION ) PUNTOCOMA</td><td port='port_two'>INSTRUCCIONES.val = Print_(EXPRESION.val</td></tr>
-<tr><td port='port_one'>EXPRESION -&gt; ATOMICO</td><td port='port_two'>EXPRESION.val = ATOMICO.val</td></tr>
-<tr><td port='port_one'>ATOMICO -&gt; F</td><td port='port_two'>ATOMICO.val = F.val</td></tr>
-<tr><td port='port_one'>F -&gt; ID CORCHETES</td><td port='port_two'>F.val = IdentifierArray(ID.value,CORCHETES.val)</td></tr>
-<tr><td port='port_one'>CORCHETES -&gt; CORCHETES CORCHETE</td><td port='port_two'>CORCHETES1.val.append(CORCHETE.val)
-CORCHETES.val = CORCHETES1.val</td></tr>
-<tr><td port='port_one'>CORCHETE -&gt; CORQIZQ F CORDER</td><td port='port_two'>CORCHETE.val = F.val</td></tr>
-<tr><td port='port_one'>F -&gt; CADENA</td><td port='port_two'>F.val = String_(as)</td></tr>
-<tr><td port='port_one'>CORCHETES -&gt; CORCHETE</td><td port='port_two'>CORCHETES.val = CORCHETE.val</td></tr>
-<tr><td port='port_one'>CORCHETE -&gt; CORQIZQ F CORDER</td><td port='port_two'>CORCHETE.val = F.val</td></tr>
-<tr><td port='port_one'>F -&gt; NUMERO</td><td port='port_two'>F.val = Number(5)</td></tr>
 </table> >]; 
 }

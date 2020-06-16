@@ -10,6 +10,7 @@ import generator as g
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
+import read as read
 
 contador = 4  #for grapho 
 currentAmbit = 'main'   #current ambit
@@ -21,10 +22,10 @@ la = 0
 co = 0 
 pasadas = 0
 
-def execute(input):
+def execute(input, textEdit):
     #print(input)
     global semanticErrorList, currentAmbit, currentParams, contador, tsGlobal
-
+    
     contador = 4  #for grapho   
     currentAmbit = 'main'   #current ambit
     currentParams[:] = []  #list of parameters that the current function will have
@@ -35,7 +36,7 @@ def execute(input):
     printList[:] = []
     semanticErrorList[:] = []
 
-    process(input,tsGlobal, printList)
+    process(input,tsGlobal, printList, textEdit)
 
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
@@ -44,7 +45,7 @@ def execute(input):
     return printList
 
 printDebug = []
-def executeDebug(input):
+def executeDebug(input, textEdit):
     # print(input)
     global semanticErrorList, currentAmbit, currentParams, contador, tsGlobal
 
@@ -57,7 +58,7 @@ def executeDebug(input):
     printList = []
     printList[:] = []
     #semanticErrorList[:] = []
-    process(input, tsGlobal, printList)
+    process(input, tsGlobal, printList,textEdit)
     print("Tabla de simbolos: ")
     for i in tsGlobal.symbols:
         val = tsGlobal.get(i)
@@ -66,7 +67,7 @@ def executeDebug(input):
 
     return printList
 
-def process(instructions, ts, printList):
+def process(instructions, ts, printList, textEdit):
     global currentAmbit, pasadas, currentParams, contador    
        
     try:
@@ -75,11 +76,11 @@ def process(instructions, ts, printList):
             #isinstance verificar tipos 
             b = instructions[i]      
             if isinstance(b, Print_):                
-                Print(b,ts, printList)
+                Print(b,ts, printList, textEdit)
             elif isinstance(b, Declaration):
-                Declaration_(b, ts)
+                Declaration_(b, ts,textEdit)
             elif isinstance(b, If):
-                result = valueExpression(b.expression, ts)
+                result = valueExpression(b.expression, ts, textEdit)
                 if result == 1:
                     tmp = i
                     i = goto(i+1, instructions, b.label)
@@ -140,11 +141,11 @@ def process(instructions, ts, printList):
             i += 1
     except:
         if isinstance(instructions, Print_):
-            Print(instructions,ts, printList)
+            Print(instructions,ts, printList,textEdit)
         elif isinstance(instructions, Declaration):
-            Declaration_(instructions, ts)
+            Declaration_(instructions, ts,textEdit)
         elif isinstance(instructions, If):
-            result = valueExpression(instructions.expression, ts)
+            result = valueExpression(instructions.expression, ts,textEdit)
             if result == 1:
                 tmp = i
                 i = goto(i+1, instructions, instructions.label)
@@ -219,14 +220,17 @@ def goto(i, instructions, label):
     i = goto(0, instructions, label)
     return i
 
-def Print(instruction, ts, printList):
+def Print(instruction, ts, printList, textEdit):
     #add to .dot
     global contador
-    var = valueString(instruction.cadena, ts)
+    var = valueString(instruction.cadena, ts,textEdit)
 
     if var != '#':
-        if var != None:            
-            printList.append(var)
+        if var != None:
+            if str(var) == "\\n" or str(var) == '\\n':
+                textEdit.setPlainText(textEdit.toPlainText() + "\n")          
+            else:
+                textEdit.setPlainText(textEdit.toPlainText() + var)
         else:
             seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
             semanticErrorList.append(seob)
@@ -234,14 +238,14 @@ def Print(instruction, ts, printList):
         seob = seOb(f'Error Semantico: No se pudo imprimir {var}.', instruction.line, instruction.column)
         semanticErrorList.append(seob)
 
-def Declaration_(instruction, ts): 
+def Declaration_(instruction, ts,textEdit): 
     #print(str(instruction))
     try:
         global la, co,contador
         la = instruction.line
         co = instruction.column
 
-        val = valueExpression(instruction.val, ts)
+        val = valueExpression(instruction.val, ts,textEdit)
         if val == '#':
             seob = seOb(f'Error Semantico: No se pudo declarar {instruction.id}.', instruction.line, instruction.column)
             semanticErrorList.append(seob)
@@ -272,7 +276,7 @@ def Declaration_(instruction, ts):
                 valor = ts.get(instruction.id).valor
 
             if isinstance(instruction.val, ExpressionsDeclarationArray):
-                valor = valueArray(instruction.id, instruction.val, ts, valor)
+                valor = valueArray(instruction.id, instruction.val, ts, valor,textEdit)
 
             if isinstance(valor, str):
 
@@ -283,7 +287,7 @@ def Declaration_(instruction, ts):
                 listaKeys = valor.values()
 
             sym = TS.Symbol(instruction.id, type_, valor, currentAmbit, 0, len(listaKeys))
-            #valueArray(sym, instruction.val, ts)
+            #valueArray(sym, instruction.val, ts,textEdit)
             if ts.exist(instruction.id) != 1:
                 ts.add(sym)
             else:
@@ -310,27 +314,27 @@ def getType(val):
     elif isinstance(val, str):
         if len(val) == 1: return TS.TypeData.CHAR
 
-def valueString(expression, ts):
+def valueString(expression, ts,textEdit):
     if isinstance(expression, String_): return expression.string
-    elif isinstance(expression, Number): return str(valueExpression(expression, ts))
-    elif isinstance(expression, Identifier): return str(valueExpression(expression, ts))
-    else: return str(valueExpression(expression, ts))
+    elif isinstance(expression, Number): return str(valueExpression(expression, ts,textEdit))
+    elif isinstance(expression, Identifier): return str(valueExpression(expression, ts,textEdit))
+    else: return str(valueExpression(expression, ts,textEdit))
 
-def valueArray(id, instruction, ts, valor):
+def valueArray(id, instruction, ts, valor,textEdit):
     # VALIDAR QUE NO SOBREESCRIBA CADA DICCIONARIO
     # el valor corresponde a la variable que queremos modificar entonces si es str solo podra tener una dimension de ambos lados
     if isinstance(valor, str):
         print("asignacion de una posicion a un string")
         if len(instruction.expressionIzq) == 1:
-            indice = valueExpression(instruction.expressionIzq[0], ts)
+            indice = valueExpression(instruction.expressionIzq[0], ts,textEdit)
             tmp = list(valor)
             if indice > len(tmp):
                 # rellenar con espacios
                 for i in range(0, (indice - (len(tmp) - 1))):
                     tmp.append(" ")
-                tmp[indice] = valueExpression(instruction.expressionDer, ts)
+                tmp[indice] = valueExpression(instruction.expressionDer, ts,textEdit)
             else:
-                tmp[indice] = valueExpression(instruction.expressionDer, ts)
+                tmp[indice] = valueExpression(instruction.expressionDer, ts,textEdit)
             tmp = "".join(tmp)
             valor = tmp
             return tmp
@@ -345,7 +349,7 @@ def valueArray(id, instruction, ts, valor):
             dictionary += '}'
         else:
             while i < len(instruction.expressionIzq) - 1:
-                val = valueExpression(instruction.expressionIzq[i], ts)
+                val = valueExpression(instruction.expressionIzq[i], ts,textEdit)
                 if isinstance(val, str):
                     dictionary += '\'' + val + '\''
                 else:
@@ -367,7 +371,7 @@ def valueArray(id, instruction, ts, valor):
         # print(str(val))
         auxaux = {**valor}
         while i < len(instruction.expressionIzq) - 1:
-            valaux = auxaux.setdefault(valueExpression(instruction.expressionIzq[i], ts))
+            valaux = auxaux.setdefault(valueExpression(instruction.expressionIzq[i], ts,textEdit))
             if valaux != None:
                 # verifico que no sea un entero
                 # -------
@@ -377,23 +381,23 @@ def valueArray(id, instruction, ts, valor):
                     semanticErrorList.append(se)
                     return valor
                 elif isinstance(valaux, str):  # retorno el mismo valor
-                    print("es string ");
+                    print("es string ")
                     print("asignacion de una posicion a un string")
                     #t[0]['nombre'][4]  -> i se encuantra en 'nombre'
                     if len(instruction.expressionIzq) == i+2:
                         #t[0]['nombre'][4] -> i+1 seria 4
-                        indice = valueExpression(instruction.expressionIzq[i+1], ts)
+                        indice = valueExpression(instruction.expressionIzq[i+1], ts,textEdit)
                         tmp = list(valaux)
                         if indice > len(tmp)-1:
                             # rellenar con espacios
                             for j in range(0, (indice - (len(tmp) - 1))):
                                 tmp.append(" ")
-                            tmp[indice] = valueExpression(instruction.expressionDer, ts)
+                            tmp[indice] = valueExpression(instruction.expressionDer, ts,textEdit)
                         else:
-                            tmp[indice] = valueExpression(instruction.expressionDer, ts)
+                            tmp[indice] = valueExpression(instruction.expressionDer, ts,textEdit)
                         tmp = "".join(tmp)
                         #actualizar valor del diccionario
-                        a = {valueExpression(instruction.expressionIzq[i], ts): tmp}
+                        a = {valueExpression(instruction.expressionIzq[i], ts,textEdit): tmp}
                         d = update(copy.deepcopy(valor), a)
                         return d
                     else:
@@ -402,10 +406,10 @@ def valueArray(id, instruction, ts, valor):
                         return valor
                 # --------
                 # -------
-            val = val.setdefault(valueExpression(instruction.expressionIzq[i], ts))
+            val = val.setdefault(valueExpression(instruction.expressionIzq[i], ts,textEdit))
             i += 1
-        val1 = val.setdefault(valueExpression(instruction.expressionIzq[size - 1], ts),
-                              valueExpression(instruction.expressionDer, ts))
+        val1 = val.setdefault(valueExpression(instruction.expressionIzq[size - 1], ts,textEdit),
+                              valueExpression(instruction.expressionDer, ts,textEdit))
 
         d = update(copy.deepcopy(valor), d)
         return d
@@ -426,12 +430,12 @@ def update(d1, d2):
 def getArray(sym, instruccion, ts):
     print("get array")
 
-def valueExpression(instruction, ts):
+def valueExpression(instruction, ts,textEdit):
     if isinstance(instruction, BinaryExpression):
         
         global la, co
-        num1 = valueExpression(instruction.op1, ts)
-        num2 = valueExpression(instruction.op2, ts)
+        num1 = valueExpression(instruction.op1, ts,textEdit)
+        num2 = valueExpression(instruction.op2, ts,textEdit)
         try:
             if instruction.operator == Aritmetics.MAS: 
                 if isinstance((num1 + num2), str):
@@ -453,8 +457,8 @@ def valueExpression(instruction, ts):
             semanticErrorList.append(seob)
             return '#'
     elif isinstance(instruction, LogicAndRelational):
-        val1 = valueExpression(instruction.op1, ts)
-        val2 = valueExpression(instruction.op2, ts)
+        val1 = valueExpression(instruction.op1, ts,textEdit)
+        val2 = valueExpression(instruction.op2, ts,textEdit)
         try:
             if instruction.operator == LogicsRelational.MAYORQUE: 
                 if val1 > val2: return 1
@@ -482,23 +486,23 @@ def valueExpression(instruction, ts):
             return '#'
     elif isinstance(instruction, Not):
         try:
-            num1 = valueExpression(instruction.expression, ts)
+            num1 = valueExpression(instruction.expression, ts,textEdit)
             if num1 >= 1: return 0
             else: return 1
         except:
-            se = seOb(f'Error: Tipos de datos en la operacion Not {valueExpression(instruction.expression,ts)}.', instruction.line, instruction.column)
+            se = seOb(f'Error: Tipos de datos en la operacion Not {valueExpression(instruction.expression,ts,textEdit)}.', instruction.line, instruction.column)
             semanticErrorList.append(se)
             return '#'
     elif isinstance(instruction, Abs):
         try:
-            return abs(valueExpression(instruction.expression,ts))
+            return abs(valueExpression(instruction.expression,ts,textEdit))
         except:
-            se = seOb(f'Error: Tipos de datos en la operacion Abs {valueExpression(instruction.expression,ts)}.', instruction.line, instruction.column)
+            se = seOb(f'Error: Tipos de datos en la operacion Abs {valueExpression(instruction.expression,ts,textEdit)}.', instruction.line, instruction.column)
             semanticErrorList.append(se)
             return '#'
     elif isinstance(instruction, NegativeNumber):
         try:
-            num1 = valueExpression(instruction.expression, ts)
+            num1 = valueExpression(instruction.expression, ts,textEdit)
             if isinstance(num1, int) or isinstance(num1, float):
                 return -1 * num1
             else:
@@ -519,7 +523,7 @@ def valueExpression(instruction, ts):
     elif isinstance(instruction, Number):
         return instruction.val
     elif isinstance(instruction, Cast_):
-        num1 = valueExpression(instruction.expression,ts)
+        num1 = valueExpression(instruction.expression,ts,textEdit)
         if isinstance(num1, int):
             if instruction.type == 'float':  return float(num1)
             elif instruction.type == 'char': return chr(num1)
@@ -556,8 +560,8 @@ def valueExpression(instruction, ts):
                     semanticErrorList.append(se)
                     return '#'
                 else:
-                    #print(f"valor del indice: {str(sym[valueExpression(instruction.expressions[0], ts)])}")
-                    return sym[valueExpression(instruction.expressions[0], ts)]
+                    #print(f"valor del indice: {str(sym[valueExpression(instruction.expressions[0], ts,textEdit)])}")
+                    return sym[valueExpression(instruction.expressions[0], ts,textEdit)]
             else:
                 #print("no es  string")
                 #manejo normal de array
@@ -565,7 +569,7 @@ def valueExpression(instruction, ts):
                 tmp = d
                 i = 0
                 while i < len(instruction.expressions)-1:
-                    value = valueExpression(instruction.expressions[i], ts)
+                    value = valueExpression(instruction.expressions[i], ts,textEdit)
                     tmp = tmp.setdefault(value, ts)
                     if tmp == None:
                         se = seOb(f'Error: Indice {value} del arreglo no existe.', instruction.line, instruction.column)
@@ -573,7 +577,7 @@ def valueExpression(instruction, ts):
                         return '#'
                     i += 1
 
-                result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts))
+                result = tmp.get(valueExpression(instruction.expressions[len(instruction.expressions)-1],ts,textEdit))
                 #print("Resultado de la consulta: " + str(result))
                 return result
         except:
@@ -582,23 +586,26 @@ def valueExpression(instruction, ts):
             return '#'
     elif isinstance(instruction, ReadConsole):
         #lectura de consola
-        msgBox = QtWidgets.QMessageBox()
-        msgBox.setText("Ingrese un valor en la consola.")
-        msgBox.setIcon(QtWidgets.QMessageBox.Question)
-        msgBox.exec()
-        valor = input("Porfavor ingrese un valor:")
-        try:
-            val = valor.split('.')
-            if len(val) > 1:
-                valor = float(valor)
-            else:
-                valor = int(valor)
-            return valor
-        except:
-            return valor
+        read_ = read.Read(1,1)
+        read_.ejecutar(ts)
+        
+        '''textoInicial = textEdit.toPlainText()
+        leerEntrada = True
+        textEdit.setFocus()
+        cursorTemp = textEdit.textCursor()
+        cursorTemp.setPosition(len(textoInicial))
+        textEdit.setTextCursor(cursorTemp)
+        while leerEntrada:
+            QtGui.QGuiApplication.processEvents()
+            textoTemp = textEdit.toPlainText()
+            time.sleep(0.025)
+            if(len(textoTemp) < len(textoInicial):
+                textoInicial.setPlainText(textoInicial)
+                cursorTemp = '''
+
     elif isinstance(instruction, RelationalBit):
-        val1 = valueExpression(instruction.op1, ts)
-        val2 = valueExpression(instruction.op2, ts)
+        val1 = valueExpression(instruction.op1, ts,textEdit)
+        val2 = valueExpression(instruction.op2, ts,textEdit)
         
         try:
             if instruction.operator == BitToBit.ANDBIT: 
@@ -618,7 +625,7 @@ def valueExpression(instruction, ts):
             semanticErrorList.append(se)
             return '#'
     elif isinstance(instruction, NotBit):
-        num1 = valueExpression(instruction.expression, ts)
+        num1 = valueExpression(instruction.expression, ts,textEdit)
         if isinstance(num1, int) or isinstance(num1, float):
             return  ~num1
         else:
@@ -626,7 +633,7 @@ def valueExpression(instruction, ts):
             semanticErrorList.append(se)
             return '#'
     elif isinstance(instruction, ReferenceBit):
-        val = valueExpression(instruction.expression, ts)
+        val = valueExpression(instruction.expression, ts,textEdit)
         if val != '#':
             return val
         else:
@@ -635,7 +642,7 @@ def valueExpression(instruction, ts):
             return '#'
 
 ####---------------------draw
-def grafo(instructions):
+def grafo(instructions, textEdit):
 
     global contador
     node = g.node(contador, contador, 'S')
@@ -644,151 +651,87 @@ def grafo(instructions):
     node = g.node(contador, contador+1, 'A')
     ge.add(node)
     contador+=1
-    instrucciones(instructions, ge, contador);
+    instrucciones(instructions, ge, contador,textEdit)
 
-def instrucciones(instructions, ge, padre):
+def instrucciones(instructions, ge, padre, textEdit):
     global  contador, tsGlobal
- 
-    try:
-        i = 0
-        while i < len(instructions):
-            #isinstance verificar tipos 
-            b = instructions[i]      
-            if isinstance(b, Print_):                
-                node = g.node(padre, contador+1, 'INSTRUCIONES')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'PRINT')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'print')
-                ge.add(node)
-                node = g.node(contador, contador+2, 'EXPRESIONES')
-                ge.add(node)
-                contador+=2
-                drawExpresiones(b.cadena, ge, contador, tsGlobal)
-            elif isinstance(b, Declaration):
-                node = g.node(padre, contador+1, 'DECLARACIONES')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'ID')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, str(b.id))
-                ge.add(node)
-                contador+=1
-                node = g.node(contador-2, contador+1, 'EXPRESION')
-                ge.add(node)
-                contador += 1
-                drawExpresiones(b.val, ge, contador, tsGlobal)
-            elif isinstance(b, If):
-                node = g.node(padre, contador+1, 'INSTRUCIONES')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'if')
-                ge.add(node)
-                node = g.node(contador, contador+2, ' (  EXPRESION  )')
-                ge.add(node)
-                contador += 2
-                drawExpresiones(b.expression, ge, contador, tsGlobal)
-            elif isinstance(b, Goto):
-                node = g.node(padre, contador+1, 'INSTRUCIONES')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'goto')
-                ge.add(node)
-                node = g.node(contador, contador+2, str(b.label))
-                ge.add(node)
-                contador += 2
-            elif isinstance(b, Exit):
-                node = g.node(padre, contador+1, 'INSTRUCIONES')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'exit ( )')
-                ge.add(node)
-                contador+=1
-                break
-            elif isinstance(b, Unset):
-                node = g.node(padre, contador+1, 'INSTRUCIONES')
-                ge.add(node)
-                contador+=1
-                node = g.node(contador, contador+1, 'unset ')
-                ge.add(node)
-                node = g.node(contador, contador+2, str(b.id))
-                ge.add(node)
-                contador+=2
+     
+    i = 0
+    while i < len(instructions):
+        #isinstance verificar tipos 
+        b = instructions[i]      
+        if isinstance(b, Print_):                
+            node = g.node(padre, contador+1, 'INSTRUCIONES')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'PRINT')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'print')
+            ge.add(node)
+            node = g.node(contador, contador+2, 'EXPRESIONES')
+            ge.add(node)
+            contador+=2
+            drawExpresiones(b.cadena, ge, contador, tsGlobal, textEdit)
+        elif isinstance(b, Declaration):
+            node = g.node(padre, contador+1, 'DECLARACIONES')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'ID')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, str(b.id))
+            ge.add(node)
+            contador+=1
+            node = g.node(contador-2, contador+1, 'EXPRESION')
+            ge.add(node)
+            contador += 1
+            drawExpresiones(b.val, ge, contador, tsGlobal, textEdit)
+        elif isinstance(b, If):
+            node = g.node(padre, contador+1, 'INSTRUCIONES')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'if')
+            ge.add(node)
+            node = g.node(contador, contador+2, ' (  EXPRESION  )')
+            ge.add(node)
+            contador += 2
+            drawExpresiones(b.expression, ge, contador, tsGlobal,textEdit)
+        elif isinstance(b, Goto):
+            node = g.node(padre, contador+1, 'INSTRUCIONES')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'goto')
+            ge.add(node)
+            node = g.node(contador, contador+2, str(b.label))
+            ge.add(node)
+            contador += 2
+        elif isinstance(b, Exit):
+            node = g.node(padre, contador+1, 'INSTRUCIONES')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'exit ( )')
+            ge.add(node)
+            contador+=1
+            break
+        elif isinstance(b, Unset):
+            node = g.node(padre, contador+1, 'INSTRUCIONES')
+            ge.add(node)
+            contador+=1
+            node = g.node(contador, contador+1, 'unset ')
+            ge.add(node)
+            node = g.node(contador, contador+2, str(b.id))
+            ge.add(node)
+            contador+=2
 
-            i += 1
-    except:
-        if isinstance(instructions, Print_):
-            Print(instructions,ts, printList)
-        elif isinstance(instructions, Declaration):
-            Declaration_(instructions, ts)
-        elif isinstance(instructions, If):
-            result = valueExpression(instructions.expression, ts)
-            if result == 1:
-                tmp = i
-                i = goto(i+1, instructions, instructions.label)
-                if i != 0:
-                    pasadas = 0
-                        #print("realizando salto a: "+ str(b.label))
-                else:
-                    i = tmp
-                    #print("error semantico, etiqueta no existe")
-                    se = seOb(f"Error: etiqueta {instructions.label} no existe", instructions.line, instructions.column)
-                    semanticErrorList.append(se)
-            elif result == '#':
-                se = seOb(f"Error: Condicion no valida", instructions.line, instructions.column)
-                semanticErrorList.append(se)
-        elif isinstance(instructions, Goto):
-            #seteamos la instruccion anterior como la llamada al goto
-            tmp = i
-            i = goto(i, instructions, instructions.label)
-            if i != 0:
-                pasadas = 0
-                #print("realizando salto a: "+ str(b.label))
-            else:
-                i = tmp
-                #print("error semantico, etiqueta no existe")
-                se = seOb(f"Error: etiqueta {instructions.label} no existe", instructions.line, instructions.column)
-                semanticErrorList.append(se)
-        elif isinstance(instructions, Label):
-            #insert to symbols table
-            #type_ = 0
-            if len(currentParams) > 0:
-                #procedimiento tipo 7, cambiara a funcion si lee un $Vn
-                if ts.exist(instructions.label) == 1:
-                    #print("exists: "+ str(b.label))
-                    type_ = ts.get(instructions.label).tipo
-                else:
-                    type_ = TS.TypeData.PROCEDIMIENTO
-            else:
-                type_= TS.TypeData.CONTROL
+        i += 1
 
-            #print("antes de insertar funcion: " + str(currentParams))
-            symbol = TS.Symbol(instructions.label, type_, 0, currentAmbit, currentParams.copy())
-            currentParams[:] = [] #clean to current Params    
-            #print("despues de insertar funcion: " + str(symbol.parametros))
-            if ts.exist(symbol.id) != 1:
-                ts.add(symbol)
-            else:
-                ts.update(symbol)
-            currentAmbit = instructions.label
-        elif isinstance(instructions, Exit):
-            return
-        elif isinstance(instructions, Unset):
-            if ts.delete(instructions.id) == 1:
-                print('variable eliminada.')
-            else:
-                se = seOb(f'Error Semantico: No se pudo eliminar {b.id}, en funcion unset.', b.line, b.column)
-                semanticErrorList.append(se)
-
-def drawExpresiones(instruction, ge, padre, ts):
+def drawExpresiones(instruction, ge, padre, ts, textEdit):
     global contador
     #print(f'ahshas: {str(instruction)}') 
     if isinstance(instruction, BinaryExpression):
-        num1 = valueExpression(instruction.op1, ts)
-        num2 = valueExpression(instruction.op2, ts)
+        num1 = valueExpression(instruction.op1, ts,textEdit)
+        num2 = valueExpression(instruction.op2, ts,textEdit)
         try:
             if instruction.operator == Aritmetics.MAS: 
                node = g.node(padre, contador+1, str(num1))
@@ -841,8 +784,8 @@ def drawExpresiones(instruction, ge, padre, ts):
         except:
             pass
     elif isinstance(instruction, LogicAndRelational):
-        val1 = valueExpression(instruction.op1, ts)
-        val2 = valueExpression(instruction.op2, ts)
+        val1 = valueExpression(instruction.op1, ts,textEdit)
+        val2 = valueExpression(instruction.op2, ts,textEdit)
         try:
             if instruction.operator == LogicsRelational.MAYORQUE: 
                 node = g.node(padre, contador+1, str(val1))
@@ -939,7 +882,7 @@ def drawExpresiones(instruction, ge, padre, ts):
             pass
     elif isinstance(instruction, Not):
         try:
-            num1 = valueExpression(instruction.expression, ts)
+            num1 = valueExpression(instruction.expression, ts,textEdit)
             node = g.node(padre, contador+1, str(val1))
             ge.add(node)
             contador +=1
@@ -953,14 +896,14 @@ def drawExpresiones(instruction, ge, padre, ts):
             node = g.node(padre, contador+1, 'abs')
             ge.add(node)
             contador +=1
-            node = g.node(padre, contador+1, str(valueExpression(instruction.expression,ts)))
+            node = g.node(padre, contador+1, str(valueExpression(instruction.expression,ts,textEdit)))
             ge.add(node)
             contador +=1
         except:
             pass
     elif isinstance(instruction, NegativeNumber):
         try:
-            num1 = valueExpression(instruction.expression, ts)
+            num1 = valueExpression(instruction.expression, ts,textEdit)
             node = g.node(padre, contador+1, '-')
             ge.add(node)
             contador +=1
@@ -978,7 +921,7 @@ def drawExpresiones(instruction, ge, padre, ts):
         ge.add(node)
         contador +=1
     elif isinstance(instruction, Cast_):
-        num1 = valueExpression(instruction.expression,ts)
+        num1 = valueExpression(instruction.expression,ts,textEdit)
 
         node = g.node(padre, contador+1, str(instruction.type))
         ge.add(node)
@@ -993,14 +936,14 @@ def drawExpresiones(instruction, ge, padre, ts):
     elif isinstance(instruction, ExpressionsDeclarationArray):
         #print(f'ahshas: {str(instruction.expressionDer)}') 
         for i in instruction.expressionIzq:
-            node = g.node(padre, contador+1, f'[{str(valueExpression(i, ts))}]')
+            node = g.node(padre, contador+1, f'[{str(valueExpression(i, ts,textEdit))}]')
             ge.add(node)
             contador +=1
         node = g.node(padre, contador+1, f'=')
         ge.add(node)
         contador +=1
 
-        drawExpresiones(instruction.expressionDer, ge, padre, tsGlobal)
+        drawExpresiones(instruction.expressionDer, ge, padre, tsGlobal, textEdit)
     elif instruction == 'array': 
         node = g.node(padre, contador+1, f'array ( )')
         ge.add(node)
@@ -1015,7 +958,7 @@ def drawExpresiones(instruction, ge, padre, ts):
             i = 0
             while i < len(instruction.expressions):
                 print(str(i))
-                node = g.node(padre, contador+1, f'[{str(valueExpression(instruction.expressions[i], ts))}]')
+                node = g.node(padre, contador+1, f'[{str(valueExpression(instruction.expressions[i], ts,textEdit))}]')
                 ge.add(node)
                 contador +=1
                 i += 1
@@ -1023,12 +966,13 @@ def drawExpresiones(instruction, ge, padre, ts):
             pass
     elif isinstance(instruction, ReadConsole):
         #lectura de consola
+       
         node = g.node(padre, contador+1, 'read ( ) ')
         ge.add(node)
         contador +=1
     elif isinstance(instruction, RelationalBit):
-        val1 = valueExpression(instruction.op1, ts)
-        val2 = valueExpression(instruction.op2, ts)        
+        val1 = valueExpression(instruction.op1, ts,textEdit)
+        val2 = valueExpression(instruction.op2, ts,textEdit)        
         try:
             if instruction.operator == BitToBit.ANDBIT: 
                 node = g.node(padre, contador+1, str(val1))
@@ -1083,7 +1027,7 @@ def drawExpresiones(instruction, ge, padre, ts):
         except:
             pass
     elif isinstance(instruction, NotBit):
-        num1 = valueExpression(instruction.expression, ts)
+        num1 = valueExpression(instruction.expression, ts,textEdit)
         node = g.node(padre, contador+1, '~')
         ge.add(node)
         contador +=1
@@ -1091,7 +1035,7 @@ def drawExpresiones(instruction, ge, padre, ts):
         ge.add(node)
         contador +=1
     elif isinstance(instruction, ReferenceBit):
-        val = valueExpression(instruction.expression, ts)
+        val = valueExpression(instruction.expression, ts,textEdit)
         node = g.node(padre, contador+1, '&')
         ge.add(node)
         contador +=1

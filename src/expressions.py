@@ -99,6 +99,13 @@ class Not(LogicalExpression):
 
 
 ######----------------- bit-bit section
+class Empty:
+    ''' aslas '''
+class empty(Empty):
+    
+    def __init__(self, val = ''):
+        self.val = val
+
 class BitBit:
     '''this class represent an bit to bit expressions'''
 

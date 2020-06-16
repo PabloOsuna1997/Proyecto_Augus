@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import *
 
 import execute
 import grammar
+import grammarDesc
 import re
 import reportGenerator as rg
 import SymbolTable as TS
@@ -354,14 +355,14 @@ class Ui_Augus(object):
             print("closing file dialog.")
 
     def fn_repASTGeneral(self):
-        try:  
+        #try:  
             fgraph = open('../reports/astG.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" { node [shape=box];")
             fgraph.close()
 
             #llamar a metodo de dibujo en execute
             global instructionsList
-            execute.grafo(instructionsList)
+            execute.grafo(instructionsList,self.textEditConsole)
 
             fgraph = open('../reports/astG.dot','a') #agregamos al archivo '}'
             fgraph.write("}")
@@ -374,11 +375,11 @@ class Ui_Augus(object):
             #ruta = ("../reports/ast.png")
             #im = Image.open(ruta)
             #im.show()
-        except:
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Error al crear reporte.")
-            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-            self.msgBox.exec()
+        #except:
+            #self.msgBox = QtWidgets.QMessageBox()
+            #self.msgBox.setText("Error al crear reporte.")
+            #self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            #self.msgBox.exec()
 
     def fn_repAST(self):
         try:
@@ -533,7 +534,7 @@ class Ui_Augus(object):
         # para debuguear debo ir mandando instruccion por instruccion
         if conttadorIns < len(instructionsDebug):
             if isinstance(instructionsDebug[conttadorIns], If):
-                result = execute.valueExpression(instructionsDebug[conttadorIns].expression, execute.tsGlobal)                
+                result = execute.valueExpression(instructionsDebug[conttadorIns].expression, execute.tsGlobal, self.textEditConsole)                
                 self.textDebug.append(f'if: {result} ->')                
                 if result == 1:
                     self.textDebug.append('true')
@@ -565,7 +566,7 @@ class Ui_Augus(object):
                     se = seOb(f"Error: etiqueta {instructionsDebug[conttadorIns].label} no existe", instructionsDebug[conttadorIns].line, instructionsDebug[conttadorIns].column)
                     execute.semanticErrorList.append(se)
             else:
-                printListDebug.append(execute.executeDebug(instructionsDebug[conttadorIns]))
+                printListDebug.append(execute.executeDebug(instructionsDebug[conttadorIns],self.textEditConsole))
                 #tsDebug.updateDict(execute.tsGlobal)
             conttadorIns += 1
 
@@ -734,22 +735,7 @@ class Ui_Augus(object):
             else:
                 Augus.setStyleSheet('QMainWindow{background-color: green; border: 1px solid black;}')
                 #not exist errors                            
-                printList = execute.execute(result)
-
-                print("\nConsole:")
-                self.textEditConsole.setText("")
-                self.textEditConsole.setPlainText("CONSOLE:\n")
-                textoLinea = '> '
-                for element in printList:
-                    if element == "\\n" or element == '\\n':
-                        self.textEditConsole.append(textoLinea +"\n")
-                        textoLinea = '> '          
-                    else:
-                        textoLinea += str(element)
-                        #self.textEditConsole.append("> " + str(element))
-                        print( "> " + str(element))
-                self.textEditConsole.append(textoLinea +"\n")
-                textoLinea = '> '
+                execute.execute(result, self.textEditConsole)
                 
                 if len(execute.semanticErrorList) == 0:
                     
@@ -785,13 +771,36 @@ class Ui_Augus(object):
             #self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
-        try:
+        #try:
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-            print("contenido a ejecutar de manera descendente: " + content)        
-        except:
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setText("Empty Area.")
-            self.msgBox.exec()
+            content += '\n'
+            result = grammarDesc.parse(content)
+            
+            #global instructionsList
+            #instructionsList = result[:] 
+
+            printList = execute.execute(grammarDesc.lisInstructions, self.textEditConsole)
+            grammarDesc.lisInstructions[:] = []
+            if True:
+                print("\nConsole:")
+                self.textEditConsole.setText("")
+                self.textEditConsole.setPlainText("CONSOLE:\n")
+                textoLinea = '> '
+                for element in printList:
+                    if element == "\\n" or element == '\\n':
+                        self.textEditConsole.append(textoLinea +"\n")
+                        textoLinea = '> '          
+                    else:
+                        textoLinea += str(element)
+                        #self.textEditConsole.append("> " + str(element))
+                        print( "> " + str(element))
+                self.textEditConsole.append(textoLinea +"\n")
+                textoLinea = '> '    
+
+        #except:
+            #self.msgBox = QtWidgets.QMessageBox()
+            #self.msgBox.setText("Empty Area.")
+            #self.msgBox.exec()
 
     def fn_Guardar(self):
         #content to save
