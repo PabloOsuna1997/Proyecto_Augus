@@ -315,7 +315,7 @@ def valueString(expression, ts,textEdit):
     elif isinstance(expression, Identifier):
         if ts.exist(expression.id) == 1:
             if isinstance(ts.get(expression.id).valor, dict):
-                se = seOb(f'Error Semantico: No se pudo imprimir {expression.id}.', expression.line, expression.column)
+                se = seOb(f'Error Semantico: No se pudo imprimir {expression.id} porque es una arreglo.', expression.line, expression.column)
                 semanticErrorList.append(se)
                 return '#'
             else:
@@ -526,6 +526,7 @@ def valueExpression(instruction, ts,textEdit):
         return instruction.val
     elif isinstance(instruction, Cast_):
         num1 = valueExpression(instruction.expression,ts,textEdit)
+        #validations if num1 is array
         if isinstance(num1, int):
             if instruction.type == 'float':  return float(num1)
             elif instruction.type == 'char': return chr(num1)
