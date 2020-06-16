@@ -38,6 +38,7 @@ instructionsDebug = []
 printPases = []
 conttadorIns = 0
 instructionsList = []
+banderaDescAsc = True
 
 class pintar(QtGui.QSyntaxHighlighter):
 
@@ -452,9 +453,14 @@ class Ui_Augus(object):
             fgraph.write("<tr><td colspan=\"3\">REPORTE GRAMATICAL</td></tr>\n")
             fgraph.write("<tr><td port=\'port_one\'>PRODUCCION</td><td port=\'port_two\'>REGLAS SEMANTICAS</td></tr>\n")
             
-            for i in grammar.grammarList:
-                fgraph.write(f"<tr><td align=\"left\" port=\'port_one\'>{str(i.production.replace('<', '&lt;').replace('>', '&gt;').replace('|', '<BR/>|').replace('<<','&lt&lt;').replace('>>','&gt&gt;'))}</td><td align=\"left\" port=\'port_two\'>{str(i.rules)}</td></tr>\n")
-                        
+            global banderaDescAsc  #true = se analizo ascendente y 0 se analizao descendente
+            if banderaDescAsc:
+                for i in grammar.grammarList:
+                    fgraph.write(f"<tr><td align=\"left\" port=\'port_one\'>{str(i.production.replace('<', '&lt;').replace('>', '&gt;').replace('|', '<BR/>|').replace('<<','&lt&lt;').replace('>>','&gt&gt;'))}</td><td align=\"left\" port=\'port_two\'>{str(i.rules)}</td></tr>\n")
+            else:
+                for i in grammarDesc.grammarList:
+                    fgraph.write(f"<tr><td align=\"left\" port=\'port_one\'>{str(i.production.replace('<', '&lt;').replace('>', '&gt;').replace('|', '<BR/>|').replace('<<','&lt&lt;').replace('>>','&gt&gt;'))}</td><td align=\"left\" port=\'port_two\'>{str(i.rules)}</td></tr>\n")
+            
             fgraph.write("</table> >]; \n}")
             fgraph.close()
 
@@ -687,6 +693,8 @@ class Ui_Augus(object):
     def fn_Ejecutar_Ascendente(self):
         try:
             #region initialization
+            global banderaDescAsc
+            banderaDescAsc = True
             self.textEditConsole.setText("CONSOLE:\n")
             execute.contador = 4  #for grapho   
             execute.currentAmbit = 'main'   #current ambit
@@ -768,6 +776,8 @@ class Ui_Augus(object):
     def fn_Ejecutar_Descendente(self):
         try:
             #region initialization
+            global banderaDescAsc
+            banderaDescAsc = False
             self.textEditConsole.setText("CONSOLE:\n")
             execute.contador = 4  #for grapho   
             execute.currentAmbit = 'main'   #current ambit

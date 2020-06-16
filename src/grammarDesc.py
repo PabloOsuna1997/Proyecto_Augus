@@ -218,7 +218,7 @@ def p_init(t):
     global lisInstructions
     tmp = flatten(lisInstructions)
     lisInstructions = tmp[:]
-    print(f"\n\nlista: {str(lisInstructions)}")
+    #print(f"\n\nlista: {str(lisInstructions)}")
     #for i in grammarList:
         #print(f'production: {i.production}, rules: {i.rules}')
 
@@ -229,28 +229,14 @@ def p_main(t):
     #print(f'sentencias: {str(t[3])}')
     global grammarList
     grammarList.append(g.nodeGramatical('A  -> MAIN DOSPUNTOS SENTENCIAS', f'A.val = SENTENCIAS.val'))
-    #region graph
-    global contador, conNode, fgraph    
-    fgraph.write("n00"+str(conNode+1)+" [label=\"MAIN\"] ;\n")
-    fgraph.write("n00"+str(conNode+2)+" [label=\":\"] ;\n")
-    fgraph.write("n00"+str(conNode+3)+" [label=\"SENTENCIAS\"] ;\n")
-
-    for i in senteList_:
-        fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(i)+";\n")
-    senteList_[:] = []
-    senteList.append(conNode+1)
-    senteList.append(conNode+2)
-    senteList.append(conNode+3)
-    conNode +=3
-    #endregion
-
-def flatten(nested_list):
+   
+def flatten(list_):
     try:
-        head = nested_list[0]
+        head = list_[0]
     except IndexError:
         return []
     return ((flatten(head) if isinstance(head, list) else [head]) +
-            flatten(nested_list[1:]))
+            flatten(list_[1:]))
 
 def p_sentencias_lista(t):
     'SENTENCIAS   : SENTENCIA SENTENCIAS_'
@@ -260,18 +246,23 @@ def p_sentencias_lista(t):
     tmp = flatten(lists)
     t[0] = tmp
 
+    global grammarList
+    grammarList.append(g.nodeGramatical('SENTENCIAS  -> SENTENCIA SENTENCIAS_ ', f'SENTENCIAS_.val.append(SENTENCIA.val) \n SENTENCIAS.val = SENTENCIAS_.val'))
+
 def p_sentecncia__lista(t):
     'SENTENCIAS_   : SENTENCIA SENTENCIAS_'
     lists = []
     lists.append(t[1])
     lists.append(t[2])
     t[0] = lists
-    #t[1] = [t[2]]
-    #t[0] = t[1]
+    global grammarList
+    grammarList.append(g.nodeGramatical('SENTENCIAS_  -> SENTENCIA SENTENCIAS_ ', f'SENTENCIAS_1_.val.append(SENTENCIA.val) \n SENTENCIAS_.val = SENTENCIAS_1_.val'))
 
 def p_sentencias__empty(t):
     'SENTENCIAS_   : '
     t[0] = empty()
+    global grammarList
+    grammarList.append(g.nodeGramatical('SENTENCIAS_  -> epsilon ', f'SENTENCIAS_.val = empty()'))
 
 def p_sentencia_eti(t):
     'SENTENCIA    : ETIQUETA'
@@ -279,47 +270,21 @@ def p_sentencia_eti(t):
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('SENTENCIA -> ETIQUETA', f'SENTENCIA.val = ETIQUETA.val'))
-    #region draw graph
-    global contador, conNode, senteList
-    fgraph.write("n00"+str(conNode+1)+" [label=\"ETIQUETA\"] ;\n")
-    #print(senteList)
-    for i in senteList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-    senteList[:] = []
-    #print(senteList)
-    conNode +=2
-    #endregion
-
+ 
 def p_sentencia_instr(t):
     'SENTENCIA    :  INSTRUCCIONES'
 
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('SENTENCIA -> INSTRUCCIONES', f'SENTENCIA.val = INSTRUCCIONES.val'))
-    #region draw graph
-    global contador, conNode, fgraph, senteList, treeList 
-    fgraph.write("n00"+str(conNode+1)+" [label=\"INSTRUCCIONES\"] ;\n")
-    for i in senteList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-    senteList[:] = []
-    conNode +=2
-    #endregion
-
+   
 def p_sentencia_decla(t):
     'SENTENCIA    :  DECLARACIONES'
 
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('SENTENCIA -> DECLARACIONES', f'SENTENCIA.val = DECLARACIONES.val'))
-    #region graph
-    global contador, conNode, fgraph, senteList
-    fgraph.write("n00"+str(conNode+1)+" [label=\"DECLARACIONES\"] ;\n")
-    for i in senteList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-    senteList[:] = []
-    conNode +=2
-    #endregion
-
+   
 def p_etiqueta_error(t):
     'ETIQUETA   : LABEL error DOSPUNTOS' 
         
@@ -327,19 +292,9 @@ def p_etiqueta(t):
     # i call label to recognize the label
     'ETIQUETA   : LABEL DOSPUNTOS' 
     t[0] = Label(t[1], t.lineno(1), find_column(input_, t.slice[1]))
-    global lisInstructions
-    lisInstructions.append(Label(t[1], t.lineno(1), find_column(input_, t.slice[1])))
     global grammarList
     grammarList.append(g.nodeGramatical('ETIQUETA -> LABEL DOSPUNTOS', f'ETIQUETA.val = Label(LABEL.value)'))
-    #region draw graph
-    global contador,conNode, senteList
-    fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-    fgraph.write("n00"+str(conNode+2)+" [label=\":\"] ;\n")        
-    senteList.append(conNode+1)
-    senteList.append(conNode+2)
-    conNode += 2
-    #endregion
-
+  
 def p_instrucciones_error(t):
     '''INSTRUCCIONES    : PRINT PARIZQ error PARDER PUNTOCOMA
                         | IF PARIZQ error PARDER GOTO LABEL PUNTOCOMA
@@ -357,116 +312,23 @@ def p_instrucciones(t):
     global contador, conNode, fgraph, senteList, input_, grammarList, lisInstructions
     if(t[1] == 'print'): 
         t[0] = Print_(t[3], t.lineno(2), find_column(input_, t.slice[2]))
-        lisInstructions.append(Print_(t[3], t.lineno(2), find_column(input_, t.slice[2])))
-        #region graph
-        fgraph.write("n00"+str(conNode+1)+" [label=\"print\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\"EXPRESION\"] ;\n")
-        fgraph.write("n00"+str(conNode+4)+" [label=\")\"] ;\n")
-        fgraph.write("n00"+str(conNode+5)+" [label=\";\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(conNode)+";\n")
-        
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        senteList.append(conNode+5)
-        conNode += 5
-        #endregion      
         grammarList.append(g.nodeGramatical('INSTRUCCIONES -> PRINT ( EXPRESION ) PUNTOCOMA', f'INSTRUCCIONES.val = Print_(EXPRESION.val'))
     elif(t[1] == 'if'): 
         t[0] = If(t[3], t[6], t.lineno(2), find_column(input_, t.slice[2]))
-        lisInstructions.append(If(t[3], t[6], t.lineno(2), find_column(input_, t.slice[2])))
-        #region graph
-        fgraph.write("n00"+str(conNode+1)+" [label=\"if\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\"EXPRESION\"] ;\n")
-        fgraph.write("n00"+str(conNode+4)+" [label=\")\"] ;\n")
-        fgraph.write("n00"+str(conNode+5)+" [label=\"goto\"] ;\n")
-        fgraph.write("n00"+str(conNode+6)+" [label=\"label\"] ;\n")
-        fgraph.write("n00"+str(conNode+7)+" [label=\";\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(conNode)+";\n")
-        
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        senteList.append(conNode+5)
-        senteList.append(conNode+6)
-        senteList.append(conNode+7)
-        conNode += 7
-        #endregion
         grammarList.append(g.nodeGramatical('INSTRUCCIONES -> IF ( EXPRESION ) GOTO LABEL PUNTOCOMA', f'INSTRUCCIONES.val = If(EXPRESION.val, LABEL.value'))
     elif(t[1] == 'unset'): 
         t[0] = Unset(t[3], t.lineno(3), t.lexpos(3))
-        lisInstructions.append(Unset(t[3], t.lineno(3), t.lexpos(3)))
-        #region graph
-        fgraph.write("n00"+str(conNode+1)+" [label=\"unset\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\""+t[3]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+4)+" [label=\")\"] ;\n")
-        fgraph.write("n00"+str(conNode+5)+" [label=\";\"] ;\n")
-        
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        senteList.append(conNode+5)
-        conNode += 5
-        #endregion
         grammarList.append(g.nodeGramatical('INSTRUCCIONES -> UNSET ( ID ) PUNTOCOMA', f'INSTRUCCIONES.val = Unset(ID.value)'))
     elif(t[1] == 'goto'): 
         t[0] = Goto(t[2])
-        lisInstructions.append(Goto(t[2]))
-        #region graph
-        fgraph.write("n00"+str(conNode+1)+" [label=\"goto\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" [label=\""+t[2]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\";\"] ;\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        conNode += 3
-        #endregion
         grammarList.append(g.nodeGramatical('INSTRUCCIONES -> GOTO LABEL PUNTOCOMA', f'INSTRUCCIONES.val = Goto(LABEL.value)'))
     elif(t[1] == 'exit'): 
         t[0] = Exit()
-        lisInstructions.append(Exit())
-        #region graph
-        fgraph.write("n00"+str(conNode+1)+" [label=\"exit\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" [label=\"(\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\")\"] ;\n")
-        fgraph.write("n00"+str(conNode+4)+" [label=\";\"] ;\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        conNode += 4
-        #endregion
         grammarList.append(g.nodeGramatical('INSTRUCCIONES -> EXIT PUNTOCOMA', f'INSTRUCCIONES.val = Exit( )'))
 
 def p_declaraciones(t):
-    'DECLARACIONES  : ID ARRAY_'   
-    #insertion a new variable
-    print(f"array: {str(t[2])}")
-
+    'DECLARACIONES  : ID ARRAY_'
     t[0] = Declaration(t[1], t.lineno(1), t.lexpos(1),t[2])
-    global lisInstructions
-    lisInstructions.append(Declaration(t[1], t.lineno(1), t.lexpos(1),t[2]))
-    #region
-    global contador, conNode, fgraph, senteList, corcheList
-    fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-    fgraph.write("n00"+str(conNode+2)+" [label=\"ARRAY_\"] ;\n")    
-    for i in senteList:
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
-    senteList[:] = []
-
-    for i in corcheList:
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
-    corcheList[:] = []
-    senteList.append(conNode+1)
-    senteList.append(conNode+2)
-    conNode +=3
-    #endregion
     global grammarList
     grammarList.append(g.nodeGramatical('DECLARACIONES -> ID ARRAY', f'DECLARACIONES.val = Declaration(ID.value,ARRAY_.val'))
 
@@ -480,50 +342,12 @@ def p_array_error(t):
 def p_array(t):
     '''ARRAY_    :  CORCHETES IGUAL EXPRESION PUNTOCOMA
                 | IGUAL EXPRESION PUNTOCOMA'''
-
-    #region graph
-    global contador, conNode, fgraph, senteList, corcheList,res, bandera, corcheListaux
-    if t[1] == '=':
-        fgraph.write("n00"+str(conNode+1)+" [label=\"=\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" [label=\"EXPRESION\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\";\"] ;\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        conNode += 4    
-    else:      
-        fgraph.write("n00"+str(conNode+1)+" [label=\"CORCHETES\"] ;\n")
-        #print("hijos de corchete: "+ str(res))
-        if bandera == 1:
-            for i in corcheListaux:
-                fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-            corcheListaux[:] = []
-        else:
-            for i in corcheList:
-                fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-            corcheList[:] = []
-
-        fgraph.write("n00"+str(conNode+2)+" [label=\"=\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\"EXPRESION\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(conNode)+";\n")
-        fgraph.write("n00"+str(conNode+4)+" [label=\";\"] ;\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        conNode += 4
-    #endregion
-     
     global grammarList
     if(t[1] == '='): 
         t[0] = t[2]  #if expresion is array, expression contain 'array'
         grammarList.append(g.nodeGramatical('ARRAY_ -> IGUAL EXPRESION PUNTOCOMA', f'ARRAY_.val = EXPRESION.val'))
     else: 
-        print("expresion declaracion")
         t[0] = ExpressionsDeclarationArray(t[1], t[3], t.lineno(2), find_column(input_, t.slice[2]))
-        global lisInstructions
-        #lisInstructions.append(ExpressionsDeclarationArray(t[1], t[3], t.lineno(2), find_column(input_, t.slice[2])))
         grammarList.append(g.nodeGramatical('ARRAY_ -> CORCHETES IGUAL EXPRESION PUNTOCOMA', f'ARRAY_.val = ExpresionDeclarationArray(CORCHETES.val, EXPRESION.val)'))
 
 def p_corchete_lista(t):
@@ -533,79 +357,47 @@ def p_corchete_lista(t):
         #lista en esta posicion viene invertida, asi que se revierte
         t[2].reverse()
     t[0] = t[2]
+    global grammarList
+    grammarList.append(g.nodeGramatical('CORCHETES -> CORCHETES CORCHJETES_', f'CORCHETES_.val.append(CORCHETE.val) \n CORCHETES_.val.reverse() \n CORRCHETES.val = CORCHETES_.val'))
     
 def p_corchetes__corchete(t):
     'CORCHETES_ : CORCHETE CORCHETES_'
     if isinstance(t[2], list):
         t[2].append(t[1])
     t[0] = t[2]
+    global grammarList
+    grammarList.append(g.nodeGramatical('CORCHETES_ -> CORCHETES CORCHETES_', f'CORCHETES_1_.val.append(CORCHETE.val) \n  CORRCHETES_.val = CORCHETES_1_.val'))
 
 def p_corchetes__empty(t):
     'CORCHETES_  : '
     t[0] = []
+    global grammarList
+    grammarList.append(g.nodeGramatical('CORCHETES_ -> epsilon', f'CORCHETES_.val = empty()'))
 
 def p_corchete(t):
     'CORCHETE : CORIZQ F CORDER'
     t[0] = t[2]
     global grammarList
     grammarList.append(g.nodeGramatical('CORCHETE -> CORQIZQ F CORDER', f'CORCHETE.val = F.val'))
-    #region
-    global contador, conNode, fgraph, senteList,csList
-    fgraph.write("n00"+str(conNode+1)+";\n")   #f
-    fgraph.write("n00"+str(conNode+1)+" [label=\"[\"] ;\n")
-    fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
-    fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-    fgraph.write("n00"+str(conNode+3)+" [label=\"]\"] ;\n")
-    senteList.append(conNode+1)
-    senteList.append(conNode+2)
-    senteList.append(conNode+3)
-    csList[:] = []
-    conNode += 3
-    #endregion
-
+  
 def p_expresion_ato(t):
     'EXPRESION    :  ATOMICO'
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('EXPRESION -> ATOMICO', f'EXPRESION.val = ATOMICO.val'))
-    #region
-    global contador, conNode, fgraph
-    fgraph.write("n00"+str(conNode+1)+";\n")   #f
-    fgraph.write("n00"+str(conNode+1)+" [label=\"ATOMICO\"] ;\n")
-    fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(conNode)+";\n")
-    conNode += 1
-    #endregion
-
+   
 def p_expresion_fun(t):
     'EXPRESION    :  FUNCION'
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('EXPRESION -> FUNCION', f'EXPRESION.val = FUNCION.val'))
-    #region
-    global contador, conNode, fgraph
-    fgraph.write("n00"+str(conNode+1)+";\n")   #f
-    fgraph.write("n00"+str(conNode+1)+" [label=\"FUNCION\"] ;\n")
-    for i in senteList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-    senteList[:] = []
-    conNode += 1
-    #endregion
-
+   
 def p_expresion_ope(t):
     'EXPRESION    :  OPERACION'
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('EXPRESION -> OPERACION', f'EXPRESION.val = OPERACION.val'))
-    #region
-    global contador, conNode, fgraph,senteList
-    fgraph.write("n00"+str(conNode+1)+";\n")   #f
-    fgraph.write("n00"+str(conNode+1)+" [label=\"OPERACION\"] ;\n")
-    for i in senteList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-    senteList[:] = []
-    conNode += 1
-    #endregion
-
+    
 def p_operacion_error(t):
     '''OPERACION    : F error F
                     | MENOS error
@@ -623,153 +415,46 @@ def p_operacion(t):
     #code
     #aritmetics
     global contador, conNode, fgraph,senteList,corcheList, grammarList, lisInstructions
-    #region
-    if len(t) == 4:
-
-        fgraph.write("n00"+str(conNode+1)+" [label=\"F\"] ;\n")
-        
-        fgraph.write("n00"+str(conNode+2)+" [label=\""+t[2]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+" [label=\"F\"] ;\n")
-        for i in csList:
-            fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(i)+";\n")
-        csList[:] = []
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        conNode += 3
-
-        grammarList.append(g.nodeGramatical('OPERACION -> F  OPERADOR F', f'OPERACION.val = BinaryExpression(F1.val,OPERADOR.val,F2.val)'))
-    #endregion
-    if(t[2] == '+'):
-        t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '-'):
-        t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(BinaryExpression(t[1],t[3],Aritmetics.MENOS, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '*'):
-        t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(BinaryExpression(t[1],t[3],Aritmetics.POR, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '/'):
-        t[0] = BinaryExpression(t[1],t[3],Aritmetics.DIV, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(BinaryExpression(t[1],t[3],Aritmetics.DIV, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '%'):
-        t[0] = BinaryExpression(t[1],t[3], Aritmetics.MODULO, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(BinaryExpression(t[1],t[3], Aritmetics.MODULO, t.lineno(2), t.lexpos(2)))
+    if(t[2] == '+'):        t[0] = BinaryExpression(t[1],t[3],Aritmetics.MAS, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '-'):        t[0] = BinaryExpression(t[1],t[3],Aritmetics.MENOS, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '*'):        t[0] = BinaryExpression(t[1],t[3],Aritmetics.POR, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '/'):        t[0] = BinaryExpression(t[1],t[3],Aritmetics.DIV, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '%'):        t[0] = BinaryExpression(t[1],t[3], Aritmetics.MODULO, t.lineno(2), t.lexpos(2))
     #unitaries
-    elif(t[1] == '-'): 
+    elif(t[1] == '-'):        
         t[0] = NegativeNumber(t[2], t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(NegativeNumber(t[2], t.lineno(2), t.lexpos(2)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #-
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #f
-        fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        conNode += 2
-        #endregion
         grammarList.append(g.nodeGramatical('OPERACION -> MENOS F', f'OPERACION.val = NegativeNumber(F.val)'))
     elif(t[1] == '!'): 
         t[0] = Not(t[2], t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(Not(t[2], t.lineno(2), t.lexpos(2)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #!
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #f
-        fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        conNode += 2
-        #endregion
         grammarList.append(g.nodeGramatical('OPERACION -> NOTLOGICA F', f'OPERACION.val = Not(F.val)'))
     elif(t[1] == '~'): 
         t[0] = NotBit(t[2], t.lineno(1), t.lexpos(1))
-        #lisInstructions.append(NotBit(t[2], t.lineno(1), t.lexpos(1)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #~
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #f
-        fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        conNode += 2
-        #endregion
         grammarList.append(g.nodeGramatical('OPERACION -> NOTBIT F', f'OPERACION.val = NotBit(F.val)'))
     elif(t[1] == '&'):
-        #print("andbit")
         t[0] = ReferenceBit(t[2], t.lineno(1), t.lexpos(1))
-        #lisInstructions.append(ReferenceBit(t[2], t.lineno(1), t.lexpos(1)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #&
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+str(t[1])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #f
-        fgraph.write("n00"+str(conNode+2)+" [label=\"F\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        conNode += 2
-        #endregion
         grammarList.append(g.nodeGramatical('OPERACION -> ANDBIT F', f'OPERACION.val = ReferenceBit(F.val)'))
     #relational and logical
-    elif(t[2] == '&&'):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.AND, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.AND, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '||'):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.OR, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.OR, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == 'xor'):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.XOR, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.XOR, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '=='):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.IGUALQUE, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.IGUALQUE, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '!='):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.DIFERENTE, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.DIFERENTE, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '>='):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '<='):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '>'):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE, t.lineno(2), t.lexpos(2)))
-    elif(t[2] == '<'):
-        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE, t.lineno(2), t.lexpos(2))
-        #lisInstructions.append(LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE, t.lineno(2), t.lexpos(2)))
+    elif(t[2] == '&&'):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.AND, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '||'):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.OR, t.lineno(2), t.lexpos(2))
+    elif(t[2] == 'xor'):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.XOR, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '=='):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.IGUALQUE, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '!='):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.DIFERENTE, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '>='):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORIGUAL, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '<='):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORIGUAL, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '>'):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MAYORQUE, t.lineno(2), t.lexpos(2))
+    elif(t[2] == '<'):        t[0] = LogicAndRelational(t[1],t[3], LogicsRelational.MENORQUE, t.lineno(2), t.lexpos(2))
     #bit to bit
-    elif(t[2] == '|'):
-        t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT, t.lineno(1), t.lexpos(1))
-        #lisInstructions.append(RelationalBit(t[1],t[3], BitToBit.ORBIT, t.lineno(1), t.lexpos(1)))
-    elif(t[2] == '^'):
-        t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT, t.lineno(1), t.lexpos(1))
-        #lisInstructions.append(RelationalBit(t[1],t[3], BitToBit.XORBIT, t.lineno(1), t.lexpos(1)))
-    elif(t[2] == '<<'):
-        t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI, t.lineno(1), t.lexpos(1))
-        #lisInstructions.append(RelationalBit(t[1],t[3], BitToBit.SHIFTI, t.lineno(1), t.lexpos(1)))
-    elif(t[2] == '>>'):
-        t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD, t.lineno(1), t.lexpos(1))
-        #lisInstructions.append(RelationalBit(t[1],t[3], BitToBit.SHIFTD, t.lineno(1), t.lexpos(1)))
+    elif(t[2] == '|'):        t[0] = RelationalBit(t[1],t[3], BitToBit.ORBIT, t.lineno(1), t.lexpos(1))
+    elif(t[2] == '^'):        t[0] = RelationalBit(t[1],t[3], BitToBit.XORBIT, t.lineno(1), t.lexpos(1))
+    elif(t[2] == '<<'):        t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTI, t.lineno(1), t.lexpos(1))
+    elif(t[2] == '>>'):        t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD, t.lineno(1), t.lexpos(1))
 
 def p_numero(t):
     'ATOMICO     : F'
     t[0] = t[1]
     global grammarList
     grammarList.append(g.nodeGramatical('ATOMICO -> F', f'ATOMICO.val = F.val'))
-    #region
-    global contador,fgraph, conNode,csList
-    fgraph.write("n00"+str(conNode+1)+";\n")   #node
-    fgraph.write("n00"+str(conNode+1)+" [label=\"F\"] ;\n")
-    for i in csList:
-        fgraph.write("n00"+str(conNode+1)+" -- "+"n00"+str(i)+";\n")
-    csList[:] = []
-    conNode += 1
-    #endregion
-
+  
 def p_funcion(t):
     '''FUNCION      : ABS PARIZQ EXPRESION PARDER
                     | READ PARIZQ PARDER
@@ -779,72 +464,15 @@ def p_funcion(t):
     global contador, conNode, fgraph, grammarList,lisInstructions
     if(t[1] == 'abs'):      
         t[0] = Abs(t[3], t.lineno(3), t.lexpos(3))
-        lisInstructions.append(Abs(t[3], t.lineno(3), t.lexpos(3)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #abs
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #(
-        fgraph.write("n00"+str(conNode+2)+" [label=\""+ str(t[2])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+";\n")   #expresion
-        fgraph.write("n00"+str(conNode+3)+" [label=\"EXPRESION\"] ;\n")        
-        fgraph.write("n00"+str(conNode+3)+" -- "+"n00"+str(conNode)+";\n")
-        fgraph.write("n00"+str(conNode+4)+";\n")   #)
-        fgraph.write("n00"+str(conNode+4)+" [label=\""+ str(t[4])+"\"] ;\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        conNode +=4
-        #endregion
         grammarList.append((g.nodeGramatical('FUNCION -> ABS ( EXPRESION )', f'FUNCION.val = Abs(EXPRESION.val)')))
     elif(t[1] == 'read'):   
         t[0] = ReadConsole(t.lineno(1), t.lexpos(1))
-        lisInstructions.append(ReadConsole(t.lineno(1), t.lexpos(1)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n") #read
-        fgraph.write("n00"+str(conNode+2)+" [label=\""+ str(t[2])+"\"] ;\n") #(
-        fgraph.write("n00"+str(conNode+3)+" [label=\""+ str(t[3])+"\"] ;\n")  #)
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        conNode +=3
-        #endregion
         grammarList.append((g.nodeGramatical('FUNCION -> READ (  )', f'FUNCION.val = ReadConsole( )')))
     elif(t[1] == '('):
         t[0] = Cast_(Identifier(t[4], t.lineno(4), t.lexpos(4)),t[2], t.lineno(2), t.lexpos(2))
-        lisInstructions.append(Cast_(Identifier(t[4], t.lineno(4), t.lexpos(4)),t[2], t.lineno(2), t.lexpos(2)))
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #(
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #tipo
-        fgraph.write("n00"+str(conNode+2)+" [label=\"TIPO\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(conNode)+";\n")
-        fgraph.write("n00"+str(conNode+3)+";\n")   #)
-        fgraph.write("n00"+str(conNode+3)+" [label=\""+ str(t[3])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+4)+";\n")   #id
-        fgraph.write("n00"+str(conNode+4)+" [label=\""+ str(t[4])+"\"] ;\n")
-
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        senteList.append(conNode+4)
-        conNode +=5
-        #endregion
         grammarList.append((g.nodeGramatical('FUNCION -> ( TIPO )', f'FUNCION.val = Cast_(Identifier({t[4]}),{t[2]})')))
     elif(t[1] == 'array'):  
         t[0] = t[1]  #devolvemos la palabra array
-        #region
-        fgraph.write("n00"+str(conNode+1)+";\n")   #array
-        fgraph.write("n00"+str(conNode+1)+" [label=\""+ str(t[1])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+2)+";\n")   #(
-        fgraph.write("n00"+str(conNode+2)+" [label=\""+ str(t[2])+"\"] ;\n")
-        fgraph.write("n00"+str(conNode+3)+";\n")   #)
-        fgraph.write("n00"+str(conNode+3)+" [label=\""+ str(t[3])+"\"] ;\n")
-        senteList.append(conNode+1)
-        senteList.append(conNode+2)
-        senteList.append(conNode+3)
-        conNode +=3
-        #endregion
         grammarList.append((g.nodeGramatical('FUNCION -> ARRAY (  )', f'FUNCION.val = \'array\'')))
 
 def p_operador(t):
@@ -889,14 +517,7 @@ def p_operador(t):
                                                     | XORBIT
                                                     | SHIFTIZQ
                                                     | SHIFTDER''', f'TIPO.val = NODE.value'))
-    #region
-    global contador, conNode, fgraph
-    conNode += 1
-    fgraph.write("n00"+str(conNode)+";\n")   #node
-    fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    conNode += 1
-    #endregion
-
+    
 def p_tipo(t):
     ''' TIPO    : INT
                 | FLOAT
@@ -905,87 +526,35 @@ def p_tipo(t):
     t[0] = t[1]
     global grammarList
     grammarList.append((g.nodeGramatical('TIPO -> INT | FLOAT | CHAR', f'TIPO.val = {t[1]}')))
-    #region
-    global contador, conNode, fgraph
-    fgraph.write("n00"+str(conNode)+";\n")   #node
-    fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    #endregion
-
+    
 def p_f_numero(t):
     'F  : NUMERO'
     global grammarList
     grammarList.append(g.nodeGramatical('F -> NUMERO', f'F.val = Number({t[1]})'))
     t[0] = Number(t.lineno(1), t.lexpos(1), t[1])
-    global lisInstructions
-    #lisInstructions.append(Number(t.lineno(1), t.lexpos(1), t[1]))
-    #region
-    global contador, conNode, fgraph,csList
-    fgraph.write("n00"+str(conNode)+";\n")   #node
-    fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    csList.append(conNode)
-    #endregion
 
 def p_f_id(t):
     'F  : ID'
     global grammarList
     grammarList.append((g.nodeGramatical('F -> ID', f'F.val = Identifier({t[1]})')))
     t[0] = Identifier(t[1], t.lineno(1), t.lexpos(1))
-    global lisInstructions
-    #lisInstructions.append(Identifier(t[1], t.lineno(1), t.lexpos(1)))
-
-    #region
-    global contador, conNode, fgraph,corcheList
-    fgraph.write("n00"+str(conNode)+";\n")   #node
-    fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    csList.append(conNode)
-    #endregion
-
+    
 def p_f_idARRAY(t):
     'F  : ID CORCHETES'
     global grammarList
     grammarList.append((g.nodeGramatical('F -> ID CORCHETES', f'F.val = IdentifierArray(ID.value,CORCHETES.val)')))
     t[0] = IdentifierArray(t[1],t[2],t.lineno(1), find_column(input_, t.slice[1]))
-    global lisInstructions
-    #lisInstructions.append(IdentifierArray(t[1],t[2],t.lineno(1), find_column(input_, t.slice[1])))
-    #region
-    global contador, conNode, fgraph,corcheList
-    fgraph.write("n00"+str(conNode+1)+" [label=\""+t[1]+"\"] ;\n")
-    fgraph.write("n00"+str(conNode+2)+" [label=\"CORCHETES\"] ;\n")
-    
-    for i in corcheList:
-        fgraph.write("n00"+str(conNode+2)+" -- "+"n00"+str(i)+";\n")
-    corcheList[:] = []
-    csList.append(conNode+1)
-    csList.append(conNode+2)
-    conNode += 2
-    #endregion
 
 def p_f_cadena(t):
     'F  : CADENA'
-    #region
-    global contador, conNode, fgraph,corcheList
-    fgraph.write("n00"+str(conNode)+";\n")   #node
-    fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    csList.append(conNode)
-    #endregion
     global grammarList
     grammarList.append((g.nodeGramatical('F -> CADENA', f'F.val = String_({t[1]})')))
     t[0] = String_(t[1], t.lineno(1), t.lexpos(1))
-    global lisInstructions
-    #lisInstructions.append(String_(t[1], t.lineno(1), t.lexpos(1)))
 
 def p_f_char(t):
     'F  : CHAR_'
-    #region
-    global contador, conNode, fgraph,corcheList, grammarList
-    fgraph.write("n00"+str(conNode)+";\n")   #node
-    fgraph.write("n00"+str(conNode)+" [label=\""+ str(t[1])+"\"] ;\n")
-    csList.append(conNode)
-    #endregion
     grammarList.append((g.nodeGramatical('F -> CHAR', f'F.val = Stirng_({t[1]})')))
     t[0] = String_(t[1], t.lineno(1), t.lexpos(1))
-    global lisInstructions
-    #lisInstructions.append(String_(t[1], t.lineno(1), t.lexpos(1)))
 
 def p_error(t):
     print("Error sintactico en '%s'" % t.value + "line: "+ str(t.lineno))
