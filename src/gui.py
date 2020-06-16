@@ -70,7 +70,7 @@ class Ui_Augus(object):
         Augus.setStyleSheet('QMainWindow{background-color: yellow; border: 1px solid black;}')
         self.centralwidget = QtWidgets.QWidget(Augus)
         self.centralwidget.setObjectName("centralwidget")
-        self.centralwidget.setStyleSheet("background-color: rgb(33,33,33);");
+        self.centralwidget.setStyleSheet("background-color: rgb(33,33,33);")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(20, 20, 471, 541))
         self.tabWidget.setObjectName("tabWidget")
@@ -273,17 +273,17 @@ class Ui_Augus(object):
 
     def fn_cambiaColorLigth(self):
         try:
-            self.textEdit.setStyleSheet('''background-color: rgb(244, 245, 235);
+            self.textEdit.setStyleSheet('''background-color: rgb(255, 255, 255);
                                         border-color: rgb(18, 18, 18);
                                         color: rgb(0, 0, 0);
                                         font: 12pt \"consolas\";
                                         ''')
-            self.textEditConsole.setStyleSheet('''background-color: rgb(244, 245, 235);
+            self.textEditConsole.setStyleSheet('''background-color: rgb(255, 255, 255);
                                                 border-color: rgb(18, 18, 18);
                                                 color: rgb(0, 0, 0);
                                                 font: 12pt \"consolas\";''')
 
-            self.centralwidget.setStyleSheet("background-color: rgb(244,245,235);");
+            self.centralwidget.setStyleSheet("background-color: rgb(255,255,255);")
         except:
             pass
 
@@ -369,7 +369,7 @@ class Ui_Augus(object):
             print("closing file dialog.")
 
     def fn_repASTGeneral(self):
-        #try:  
+        try:  
             fgraph = open('../reports/astG.dot','w+') #creamos el archivo
             fgraph.write("graph \"\" { node [shape=box];")
             fgraph.close()
@@ -389,11 +389,11 @@ class Ui_Augus(object):
             #ruta = ("../reports/ast.png")
             #im = Image.open(ruta)
             #im.show()
-        #except:
-            #self.msgBox = QtWidgets.QMessageBox()
-            #self.msgBox.setText("Error al crear reporte.")
-            #self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-            #self.msgBox.exec()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Error al crear reporte.")
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.exec()
 
     def fn_repAST(self):
         try:
@@ -686,8 +686,8 @@ class Ui_Augus(object):
 
     def fn_Ejecutar_Ascendente(self):
         try:
+            #region initialization
             self.textEditConsole.setText("CONSOLE:\n")
-            #region creations of reports
             execute.contador = 4  #for grapho   
             execute.currentAmbit = 'main'   #current ambit
             execute.currentParams = []  #list of parameters that the current function will have
@@ -735,7 +735,7 @@ class Ui_Augus(object):
                 if len(execute.semanticErrorList) == 0:
                     
                     self.msgBox = QtWidgets.QMessageBox()
-                    self.msgBox.setText("Analisis correcto.")
+                    self.msgBox.setText("Analisis Ascendente correcto.")
                     self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     self.msgBox.exec()
                 
@@ -767,11 +767,67 @@ class Ui_Augus(object):
     
     def fn_Ejecutar_Descendente(self):
         try:
+            #region initialization
+            self.textEditConsole.setText("CONSOLE:\n")
+            execute.contador = 4  #for grapho   
+            execute.currentAmbit = 'main'   #current ambit
+            execute.currentParams = []  #list of parameters that the current function will have
+            execute.semanticErrorList = []
+            execute.tsGlobal = {}
+            execute.lecturasRead = []       #sera modificada desde gui
+            execute.la = 0
+            execute.co = 0 
+            execute.pasadas = 0
+            self.textDebug.setPlainText("")
+            #endregion
+            
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             content += '\n'
             result = grammarDesc.parse(content)
-            execute.execute(result, self.textEditConsole)
-            grammarDesc.lisInstructions[:] = []    
+            global instructionsList  #save a all instructions for posterior use in graph astGenreal
+            instructionsList = result[:]
+
+            global data, dataS, dataSema, dataTs
+            if len(result) == 0:
+                Augus.setStyleSheet('QMainWindow{background-color: red; border: 1px solid black;}')
+                self.msgBox = QtWidgets.QMessageBox()
+                self.msgBox.setText("Este archivo contiene errores lexicos o sintacticos.")
+                self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+                self.msgBox.exec()
+
+                if len(grammarDesc.LexicalErrosList) > 0:                    
+                    data = [("LEXEMA", "COLUMNA", "LINEA")]
+                    for i in grammarDesc.LexicalErrosList:
+                        data.append((str(i.lexema), str(i.column), str(i.line)))
+                
+                if len(grammarDesc.sintacticErroList) > 0:                    
+                    dataS = [("LEXEMA", "COLUMNA", "LINEA")]
+                    for i in grammarDesc.sintacticErroList:
+                        dataS.append((str(i.lexema), str(i.column), str(i.line)))
+            else:
+                Augus.setStyleSheet('QMainWindow{background-color: green; border: 1px solid black;}')
+                #not exist errors   
+                execute.execute(result, self.textEditConsole)
+                grammarDesc.lisInstructions[:] = []  
+                
+                if len(execute.semanticErrorList) == 0:
+                    
+                    self.msgBox = QtWidgets.QMessageBox()
+                    self.msgBox.setText("Analisis Descendente correcto.")
+                    self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+                    self.msgBox.exec()
+                
+                else:   
+                    Augus.setStyleSheet('QMainWindow{background-color: red; border: 1px solid black;}')                
+                    dataSema = [("DESCRIPCION", "COLUMNA", "LINEA")]
+                    for i in execute.semanticErrorList:
+                        dataSema.append((str(i.description), str(i.column), str(i.line)))
+                    
+                    self.msgBox = QtWidgets.QMessageBox()
+                    self.msgBox.setText("Existen errores semanticos.")
+                    self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+                    self.msgBox.exec()
+  
 
         except:
             self.msgBox = QtWidgets.QMessageBox()

@@ -715,6 +715,7 @@ def instrucciones(instructions, ge, padre, textEdit):
             ge.add(node)
             contador += 2
             drawExpresiones(b.expression, ge, contador, tsGlobal,textEdit)
+            #mandar el node goto osea saltar entre las instrucciones 
         elif isinstance(b, Goto):
             node = g.node(padre, contador+1, 'INSTRUCIONES')
             ge.add(node)
@@ -724,6 +725,7 @@ def instrucciones(instructions, ge, padre, textEdit):
             node = g.node(contador, contador+2, str(b.label))
             ge.add(node)
             contador += 2
+            #saltar entre las instrucciones 
         elif isinstance(b, Exit):
             node = g.node(padre, contador+1, 'INSTRUCIONES')
             ge.add(node)
