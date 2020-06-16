@@ -3,8 +3,9 @@ main:
     $t1[0] = 2;
     $a0 = 5; 
     goto f1; 
-ret0: 
-    print($v0); 
+ret0:     
+    print($v0);
+    print(" "); 
     exit; 
 f1: 
     $a1 = $a0; 

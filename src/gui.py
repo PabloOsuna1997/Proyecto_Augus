@@ -437,7 +437,7 @@ class Ui_Augus(object):
             fgraph.write("<tr><td port=\'port_one\'>PRODUCCION</td><td port=\'port_two\'>REGLAS SEMANTICAS</td></tr>\n")
             
             for i in grammar.grammarList:
-                fgraph.write(f"<tr><td port=\'port_one\'>{str(i.production.replace('<', '&lt;').replace('>', '&gt;').replace('|', '<BR/>|').replace('<<','&lt&lt;').replace('>>','&gt&gt;'))}</td><td port=\'port_two\'>{str(i.rules)}</td></tr>\n")
+                fgraph.write(f"<tr><td align=\"left\" port=\'port_one\'>{str(i.production.replace('<', '&lt;').replace('>', '&gt;').replace('|', '<BR/>|').replace('<<','&lt&lt;').replace('>>','&gt&gt;'))}</td><td align=\"left\" port=\'port_two\'>{str(i.rules)}</td></tr>\n")
                         
             fgraph.write("</table> >]; \n}")
             fgraph.close()
