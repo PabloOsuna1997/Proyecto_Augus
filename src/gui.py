@@ -56,12 +56,10 @@ class pintar(QtGui.QSyntaxHighlighter):
         for i in self.expresiones:
             #print(expresion[0])
             formato.setForeground(QtGui.QColor(i[1]))
-            patron = i[0]
-            tmp = QtCore.QRegExp(patron)
+            tmp = QtCore.QRegExp(i[0])
             indice = tmp.indexIn(text,0)
             while indice >= 0:
-                length = tmp.matchedLength();
-                #print(f"er: {tmp} lenght: {str(length)}")
+                length = tmp.matchedLength()
                 QtGui.QSyntaxHighlighter.setFormat(self, indice, length, formato)
                 indice = tmp.indexIn(text,indice + length)
 
@@ -82,7 +80,7 @@ class Ui_Augus(object):
         self.textEditConsole.setObjectName("textEditConsole")
         self.textEditConsole.setStyleSheet('''background-color: rgb(33, 33, 33);
                                             border-color: rgb(18, 18, 18);
-                                            color: rgb(51, 252, 255);
+                                            color: rgb(223, 213, 213);
                                             font: 12pt \"consolas\";''' )
         self.textEditConsole.setPlainText("CONSOLE:\n")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
@@ -528,10 +526,7 @@ class Ui_Augus(object):
             self.msgBox.exec()
 
     def fn_Next(self):
-        #print("siguiente.")
         global tsDebug, printListDebug, instructionsDebug, conttadorIns, printPases
-        #not exist errors
-        # para debuguear debo ir mandando instruccion por instruccion
         if conttadorIns < len(instructionsDebug):
             if isinstance(instructionsDebug[conttadorIns], If):
                 result = execute.valueExpression(instructionsDebug[conttadorIns].expression, execute.tsGlobal, self.textEditConsole)                
@@ -567,25 +562,7 @@ class Ui_Augus(object):
                     execute.semanticErrorList.append(se)
             else:
                 printListDebug.append(execute.executeDebug(instructionsDebug[conttadorIns],self.textEditConsole))
-                #tsDebug.updateDict(execute.tsGlobal)
             conttadorIns += 1
-
-        print("\nConsole:")
-        self.textEditConsole.setText("")
-        self.textEditConsole.setPlainText("CONSOLE:\n")
-        textoLinea = '> '
-        if len(printListDebug) > 0:
-            for element in printListDebug:
-                if len(element) > 0:
-                    if element[0]== "\\n" or element[0] == '\\n':
-                        self.textEditConsole.append(textoLinea +"\n")
-                        textoLinea = '> '          
-                    else:
-                        textoLinea += str(element[0])
-                        #self.textEditConsole.append("> " + str(element))
-                        print( "> " + str(element))
-            self.textEditConsole.append(textoLinea +"\n")
-            textoLinea = '> '
 
         self.textDebug.setText("")
         self.textDebug.setPlainText("DEBUG:\n")

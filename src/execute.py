@@ -7,10 +7,9 @@ import ast
 import copy
 import collections
 import generator as g
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
-import read as read
+import time
 
 contador = 4  #for grapho 
 currentAmbit = 'main'   #current ambit
@@ -527,15 +526,18 @@ def valueExpression(instruction, ts,textEdit):
         if isinstance(num1, int):
             if instruction.type == 'float':  return float(num1)
             elif instruction.type == 'char': return chr(num1)
+            elif instruction.type == 'int': return num1
 
         elif isinstance(num1, float):
             if instruction.type == 'int':  return int(num1)
-            elif instruction.type == 'char': return chr(int(num1))               
+            elif instruction.type == 'char': return chr(int(num1))
+            elif instruction.type == 'float': return num1               
 
         elif isinstance(num1, str):
             if instruction.type == 'int':  return ord(num1[0])
             elif instruction.type == 'float': return float(ord(num1[0]))
             elif instruction.type == 'char': return num1[0]
+            else: return num1
     elif isinstance(instruction, String_):
         return instruction.string
     elif isinstance(instruction, ExpressionsDeclarationArray): return 'array'
@@ -585,24 +587,36 @@ def valueExpression(instruction, ts,textEdit):
             semanticErrorList.append(se)
             return '#'
     elif isinstance(instruction, ReadConsole):
-        #lectura de consola
-        read_ = read.Read(1,1)
-        read_.ejecutar(ts)
-        
-        '''textoInicial = textEdit.toPlainText()
-        leerEntrada = True
+        entrada = ''
+        textoInicial = textEdit.toPlainText()
         textEdit.setFocus()
         cursorTemp = textEdit.textCursor()
         cursorTemp.setPosition(len(textoInicial))
         textEdit.setTextCursor(cursorTemp)
-        while leerEntrada:
+        while True:
             QtGui.QGuiApplication.processEvents()
-            textoTemp = textEdit.toPlainText()
-            time.sleep(0.025)
-            if(len(textoTemp) < len(textoInicial):
+            textoAct = textEdit.toPlainText()
+            time.sleep(0.050)
+            if len(textoAct) < len(textoInicial):  #verifico que el usuario no borre de ser asi vuelvo a setear todo como antes
                 textoInicial.setPlainText(textoInicial)
-                cursorTemp = '''
-
+                cursorTemp = textEdit.textCursor()
+                cursorTemp.setPosition(len(textoInicial))
+            elif len(textoAct) > len(textoInicial):    #si ya escribio verifico si ya tiene salto de linea
+                if textoInicial == textoAct[0:len(textoInicial)]:
+                    if textoAct[len(textoAct)-1] == "\n":
+                        #print(f'textoInicial: {textoInicial}, textoAct: {textoAct}')
+                        entrada = textoAct[len(textoInicial): len(textoAct)-1]
+                        break
+        
+        #print(entrada)
+        flo = entrada.split('.')
+        if len(flo) > 1:
+            return float(entrada)
+        else:
+            try:
+                return int(flo[0])
+            except:
+                return entrada
     elif isinstance(instruction, RelationalBit):
         val1 = valueExpression(instruction.op1, ts,textEdit)
         val2 = valueExpression(instruction.op2, ts,textEdit)
