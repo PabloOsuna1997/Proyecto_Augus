@@ -41,8 +41,6 @@ def execute(input, textEdit):
     for i in tsGlobal.symbols:
         print(str(i) + ", "+ str(tsGlobal.get(i).valor) + ", "+ str(tsGlobal.get(i).tipo)+ ", "+ str(tsGlobal.get(i).declarada) + ", " + str(tsGlobal.get(i).parametros))
 
-    return printList
-
 printDebug = []
 def executeDebug(input, textEdit):
     # print(input)
@@ -63,8 +61,6 @@ def executeDebug(input, textEdit):
         val = tsGlobal.get(i)
         print(str(i) + ", " + str(val.valor) + ", " + str(val.tipo) + ", " + str(
             val.declarada) + ", " + str(val.parametros))
-
-    return printList
 
 def process(instructions, ts, printList, textEdit):
     global currentAmbit, pasadas, currentParams, contador    
