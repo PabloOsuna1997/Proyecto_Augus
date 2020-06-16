@@ -734,7 +734,6 @@ def p_operacion(t):
     elif(t[2] == '>>'): t[0] = RelationalBit(t[1],t[3], BitToBit.SHIFTD, t.lineno(1), t.lexpos(1))
     elif (t[2] == '&'): t[0] = RelationalBit(t[1], t[3], BitToBit.ANDBIT, t.lineno(1), t.lexpos(1))
 
-
 def p_numero(t):
     'ATOMICO     : F'
     t[0] = t[1]
