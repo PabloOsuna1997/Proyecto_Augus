@@ -561,7 +561,7 @@ class Ui_Augus(object):
                     se = seOb(f"Error: etiqueta {instructionsDebug[conttadorIns].label} no existe", instructionsDebug[conttadorIns].line, instructionsDebug[conttadorIns].column)
                     execute.semanticErrorList.append(se)
             else:
-                printListDebug.append(execute.executeDebug(instructionsDebug[conttadorIns],self.textEditConsole))
+                execute.executeDebug(instructionsDebug[conttadorIns],self.textEditConsole)
             conttadorIns += 1
 
         self.textDebug.setText("")
@@ -610,6 +610,7 @@ class Ui_Augus(object):
             instructionsDebug[:] = []
             conttadorIns = 0
             printPases[:] = []
+            self.textEditConsole.setText("CONSOLE:\n")
 
             #region creations of reports
             fgraph = open('../reports/ast.dot','w+') #creamos el archivo
