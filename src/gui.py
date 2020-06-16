@@ -25,7 +25,6 @@ from expressions import *
 from instructions import *
 from semanticObject import *
 
-
 contadorVentanas = 0
 data = []
 dataS = []
@@ -220,6 +219,7 @@ class Ui_Augus(object):
         self.actionCambiar_color_de_fondo.triggered.connect(lambda : self.fn_cambiaColor())
         self.actionLigth.triggered.connect(lambda : self.fn_cambiaColorLigth())
         self.actionMat.triggered.connect(lambda : self.fn_cambiaColorMaterial())
+        self.actionBuscar.triggered.connect(lambda : self.fn_buscarReemplazar())
 
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
@@ -246,7 +246,7 @@ class Ui_Augus(object):
         self.actionCopiar.setText(_translate("Augus", "Copiar"))
         self.actionPegar.setText(_translate("Augus", "Pegar"))
         self.actionCortar.setText(_translate("Augus", "Cortar"))
-        self.actionBuscar.setText(_translate("Augus", "Buscar"))
+        self.actionBuscar.setText(_translate("Augus", "Buscar y Reemplazar"))
         self.actionAscendente.setText(_translate("Augus", "Ascendente"))
         self.actionDescendente.setText(_translate("Augus","Descendente"))
         self.actionDebuguer.setText(_translate("Augus","Debuguer"))
@@ -254,6 +254,22 @@ class Ui_Augus(object):
         self.actionLigth.setText(_translate("Augus", "Tema Light"))
         self.actionMat.setText(_translate("Augus", "Tema Material"))
         self.actionAyuda.setText(_translate("Augus", "Ayuda"))
+
+    def fn_buscarReemplazar(self):
+        import read
+        import re
+        a = read.Read()
+        find = a.buscar("Buscar:")
+        replace = a.buscar("Reemplazar:")        
+        content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+        incidences = re.findall(find, content, flags=re.IGNORECASE)
+        cont = re.sub(find, replace, content, flags=re.IGNORECASE)
+        cont += '\n'
+        self.textEdit.setPlainText(cont)
+        self.msgBox = QtWidgets.QMessageBox()
+        self.msgBox.setText(f"Se han reemplazado {str(len(incidences))} incidencias.")
+        self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
+        self.msgBox.exec()
 
     def fn_cambiaColorLigth(self):
         try:
@@ -669,7 +685,8 @@ class Ui_Augus(object):
             self.msgBox.exec()
 
     def fn_Ejecutar_Ascendente(self):
-        #try:
+        try:
+            self.textEditConsole.setText("CONSOLE:\n")
             #region creations of reports
             execute.contador = 4  #for grapho   
             execute.currentAmbit = 'main'   #current ambit
@@ -742,11 +759,11 @@ class Ui_Augus(object):
             sys.stdout.flush()
             #endregion
             
-        #except:
-            #self.msgBox = QtWidgets.QMessageBox()
-            #self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-            #self.msgBox.setText("Area Vacia.")
-            #self.msgBox.exec()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            self.msgBox.setText("Area Vacia.")
+            self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
         #try:
