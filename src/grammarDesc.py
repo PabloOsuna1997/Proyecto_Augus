@@ -528,19 +528,21 @@ def p_array(t):
 
 def p_corchete_lista(t):
     'CORCHETES : CORCHETE CORCHETES_'
-    print(f't1_arriba: {str(t[1])}, t2_arriba: {str(t[2])}')
+    if isinstance(t[2], list):
+        t[2].append(t[1])
+        #lista en esta posicion viene invertida, asi que se revierte
+        t[2].reverse()
     t[0] = t[2]
     
 def p_corchetes__corchete(t):
     'CORCHETES_ : CORCHETE CORCHETES_'
-    print(f't1: {str(t[1])}, t2: {str(t[2])}')
+    if isinstance(t[2], list):
+        t[2].append(t[1])
     t[0] = t[2]
 
 def p_corchetes__empty(t):
     'CORCHETES_  : '
-    #t[0] = empty()
-    print("empty")
-    t[0] = t[-2]
+    t[0] = []
 
 def p_corchete(t):
     'CORCHETE : CORIZQ F CORDER'

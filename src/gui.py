@@ -766,36 +766,17 @@ class Ui_Augus(object):
             self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
-        #try:
+        try:
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             content += '\n'
             result = grammarDesc.parse(content)
-            
-            #global instructionsList
-            #instructionsList = result[:] 
+            execute.execute(result, self.textEditConsole)
+            grammarDesc.lisInstructions[:] = []    
 
-            printList = execute.execute(grammarDesc.lisInstructions, self.textEditConsole)
-            grammarDesc.lisInstructions[:] = []
-            if True:
-                print("\nConsole:")
-                self.textEditConsole.setText("")
-                self.textEditConsole.setPlainText("CONSOLE:\n")
-                textoLinea = '> '
-                for element in printList:
-                    if element == "\\n" or element == '\\n':
-                        self.textEditConsole.append(textoLinea +"\n")
-                        textoLinea = '> '          
-                    else:
-                        textoLinea += str(element)
-                        #self.textEditConsole.append("> " + str(element))
-                        print( "> " + str(element))
-                self.textEditConsole.append(textoLinea +"\n")
-                textoLinea = '> '    
-
-        #except:
-            #self.msgBox = QtWidgets.QMessageBox()
-            #self.msgBox.setText("Empty Area.")
-            #self.msgBox.exec()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Empty Area.")
+            self.msgBox.exec()
 
     def fn_Guardar(self):
         #content to save

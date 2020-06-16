@@ -1,16 +1,19 @@
 main:
-$t1 = 5;
-$t2 = &$t1;
-$t3 = &$t2;
-print($t1);
-print("\n");
-print($t2);
-print("\n");
-$t1 = 45;
-print($t1);
-print("\n");
-print($t2);
-print("\n");
+#-----referencias
+    $t1 = 5;
+    $t2 = &$t1;
+    $t3 = &$t2;
+    print($t1);
+    print("\n");
+    print($t2);
+    print("\n");
+    $t1 = 45;
+    print($t1);
+    print("\n");
+    print($t2);
+    print("\n");
+#-------------------
+
     $s0 = array(); # stack
     $sp = -1; # null pointer
     $a0 = 3; # m
