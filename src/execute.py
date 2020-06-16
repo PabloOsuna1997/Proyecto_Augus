@@ -312,7 +312,14 @@ def getType(val):
 def valueString(expression, ts,textEdit):
     if isinstance(expression, String_): return expression.string
     elif isinstance(expression, Number): return str(valueExpression(expression, ts,textEdit))
-    elif isinstance(expression, Identifier): return str(valueExpression(expression, ts,textEdit))
+    elif isinstance(expression, Identifier):
+        if ts.exist(expression.id) == 1:
+            if isinstance(ts.get(expression.id).valor, dict):
+                se = seOb(f'Error Semantico: No se pudo imprimir {expression.id}.', expression.line, expression.column)
+                semanticErrorList.append(se)
+                return '#'
+            else:
+                return str(valueExpression(expression, ts,textEdit))
     else: return str(valueExpression(expression, ts,textEdit))
 
 def valueArray(id, instruction, ts, valor,textEdit):
