@@ -39,6 +39,7 @@ printPases = []
 conttadorIns = 0
 instructionsList = []
 banderaDescAsc = True
+textCopy = ''
 
 class pintar(QtGui.QSyntaxHighlighter):
 
@@ -226,6 +227,9 @@ class Ui_Augus(object):
         self.actionBuscar.triggered.connect(lambda : self.fn_buscarReemplazar())
         self.actionAyuda.triggered.connect(lambda : self.fn_ayuda())
         self.actionAcerca.triggered.connect(lambda : self.fn_acerca())
+        self.actionCopiar.triggered.connect(lambda : self.fn_copiar())
+        self.actionPegar.triggered.connect(lambda : self.fn_pegar())
+        self.actionCortar.triggered.connect(lambda : self.fn_cortar())
 
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
@@ -261,6 +265,31 @@ class Ui_Augus(object):
         self.actionMat.setText(_translate("Augus", "Tema Material"))
         self.actionAyuda.setText(_translate("Augus", "Ayuda"))
         self.actionAcerca.setText(_translate("Augus", "Acerca de"))
+
+    def fn_copiar(self):
+        try:
+            global textCopy
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            content += '\n'
+            textCopy = content
+        except:
+            pass
+    
+    def fn_pegar(self):
+        try:
+            global textCopy
+            self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").setPlainText(textCopy)
+        except:
+            pass
+
+    def fn_cortar(self):
+        try:
+            global textCopy
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            content += '\n'
+            textCopy = content
+        except:
+            pass
 
     def fn_ayuda(self):
         self.msgBox = QtWidgets.QMessageBox()
