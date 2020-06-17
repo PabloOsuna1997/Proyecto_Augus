@@ -164,6 +164,8 @@ class Ui_Augus(object):
         self.actionMat.setObjectName("actionMat")
         self.actionAyuda = QtWidgets.QAction(Augus)
         self.actionAyuda.setObjectName("actionAyuda")
+        self.actionAcerca = QtWidgets.QAction(Augus)
+        self.actionAcerca.setObjectName("actionAcerca")
         self.menuArchivo.addAction(self.actionNuevo)
         self.menuReportes.addAction(self.actionReporteLexico)
         self.menuReportes.addAction(self.actionReporteSintactico)
@@ -188,6 +190,7 @@ class Ui_Augus(object):
         self.menuOpciones.addAction(self.actionLigth)
         self.menuOpciones.addAction(self.actionMat)
         self.menuAyuda.addAction(self.actionAyuda)
+        self.menuAyuda.addAction(self.actionAcerca)
         self.menubar.addAction(self.menuArchivo.menuAction())
         self.menubar.addAction(self.menuEditar.menuAction())
         self.menubar.addAction(self.menuEjecutar.menuAction())
@@ -221,6 +224,8 @@ class Ui_Augus(object):
         self.actionLigth.triggered.connect(lambda : self.fn_cambiaColorLigth())
         self.actionMat.triggered.connect(lambda : self.fn_cambiaColorMaterial())
         self.actionBuscar.triggered.connect(lambda : self.fn_buscarReemplazar())
+        self.actionAyuda.triggered.connect(lambda : self.fn_ayuda())
+        self.actionAcerca.triggered.connect(lambda : self.fn_acerca())
 
     def retranslateUi(self, Augus):
         _translate = QtCore.QCoreApplication.translate
@@ -255,6 +260,17 @@ class Ui_Augus(object):
         self.actionLigth.setText(_translate("Augus", "Tema Light"))
         self.actionMat.setText(_translate("Augus", "Tema Material"))
         self.actionAyuda.setText(_translate("Augus", "Ayuda"))
+        self.actionAcerca.setText(_translate("Augus", "Acerca de"))
+
+    def fn_ayuda(self):
+        self.msgBox = QtWidgets.QMessageBox()
+        self.msgBox.setText("Lenguaje Augus\nSi presentas algun inconveniente comunicate al correo 2472932372001@ingenieria.usac.edu.gt\nDesarrollador Juan Pablo Osuna de Leon\nLicencia: https://github.com/PabloOsuna1997/Proyecto_Augus/blob/master/LICENSE\nReporitorio de Github: https://github.com/PabloOsuna1997/Proyecto_Augus ")
+        self.msgBox.exec()
+
+    def fn_acerca(self):
+        self.msgBox = QtWidgets.QMessageBox()
+        self.msgBox.setText("Lenguaje Augus. \nCreado con fines academicos basado en PHP y MIPDS.\nDesarrollador en Python 3.8\nDesarrollador: Juan Pablo Osuna de Leon estudiante de la Universidad de San Carlos de Guatemala, carnet 201503911")
+        self.msgBox.exec()
 
     def fn_buscarReemplazar(self):
         import read
