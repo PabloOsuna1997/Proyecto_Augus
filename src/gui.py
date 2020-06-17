@@ -708,7 +708,7 @@ class Ui_Augus(object):
             self.msgBox.exec()
 
     def fn_Ejecutar_Ascendente(self):
-        try:
+        #try:
             #region initialization
             global banderaDescAsc
             banderaDescAsc = True
@@ -733,7 +733,7 @@ class Ui_Augus(object):
             
             #obser = unicode(content)
             #content = content.decode('utf-8')
-            content.encode('utf-8')
+            #content.encode('utf-8')
 
             result = grammar.parse(content)
             global instructionsList
@@ -789,11 +789,11 @@ class Ui_Augus(object):
             sys.stdout.flush()
             #endregion
             
-        except:
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-            self.msgBox.setText("Area Vacia.")
-            self.msgBox.exec()
+        #except:
+            #self.msgBox = QtWidgets.QMessageBox()
+            #self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            #self.msgBox.setText("Area Vacia.")
+            #self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
         try:

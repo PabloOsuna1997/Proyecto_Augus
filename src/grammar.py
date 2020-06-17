@@ -98,7 +98,7 @@ import ply.yacc as yacc
 
 from expressions import *
 from instructions import *
-from LexicalObject import *
+from lexicalObject import *
 from sintacticObject import *
 
 grammarList = []
@@ -106,7 +106,8 @@ grammarList[:] = []
 sintacticErroList = []
 sintacticErroList[:] = []
 LexicalErrosList = []
-LexicalErrosList[:] =[ ]
+LexicalErrosList[:] =[]
+aux = []
 input_ = ''
 
 def t_NUMERO(t):
@@ -163,12 +164,10 @@ def find_column(input, token):
     
 def t_error(t):
     global input_,LexicalErrosList
-    print("Illegal character '%s'" % t.value[0]+", linea: "+str(t.lexer.lineno))
     lo = lexOb(t.value[0],find_column(input_,t),t.lexer.lineno)
     LexicalErrosList.append(lo)
+    print("Illegal character '%s'" % t.value[0]+", linea: "+str(t.lexer.lineno))
     t.lexer.skip(1)
-
-lexer = lex.lex()
 
 
 
@@ -961,7 +960,7 @@ def p_error(t):
     sintacticErroList.append(so)
    
 
-parser = yacc.yacc()
+
 
 def parse(input):
     global input_, fgraph, primeravez, treeList, contador, contadorSente, conNode, senteList, senteList_, corcheList, bandera
@@ -989,6 +988,8 @@ def parse(input):
     fgraph = open('../reports/ast.dot','a') #creamos el archivo
     fgraph.write("\n") 
     #print(input_)
+    lexer = lex.lex()
+    parser = yacc.yacc()
     instructions = parser.parse(input)
     lexer.lineno = 1
     parser.restart()

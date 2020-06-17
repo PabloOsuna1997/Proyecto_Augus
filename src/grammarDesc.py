@@ -92,7 +92,7 @@ t_MENORIGUAL= r'\<\='
 t_MAYORQUE  = r'\>'
 t_MENORQUE  = r'\<'
 
-from LexicalObject import *
+from lexicalObject import *
 from sintacticObject import *
 import generator as g
 grammarList = []
@@ -163,7 +163,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 import ply.lex as lex
-lexer = lex.lex()
+
 
 
 #sintactic
@@ -564,7 +564,7 @@ def p_error(t):
    
 
 import ply.yacc as yacc
-parser = yacc.yacc()
+
 
 def parse(input):
     global input_, fgraph, primeravez, treeList, contador, contadorSente, conNode, senteList, senteList_, corcheList, bandera
@@ -592,6 +592,8 @@ def parse(input):
     fgraph = open('../reports/ast.dot','a') #creamos el archivo
     fgraph.write("\n") 
     #print(input_)
+    lexer = lex.lex()
+    parser = yacc.yacc()
     instructions = parser.parse(input)
     lexer.lineno = 1
     parser.restart()
