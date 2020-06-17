@@ -92,7 +92,7 @@ t_MENORIGUAL= r'\<\='
 t_MAYORQUE  = r'\>'
 t_MENORQUE  = r'\<'
 
-from lexicalObject import *
+from LexicalObject import *
 from sintacticObject import *
 import generator as g
 grammarList = []

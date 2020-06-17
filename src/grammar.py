@@ -92,9 +92,15 @@ t_MENORIGUAL= r'\<\='
 t_MAYORQUE  = r'\>'
 t_MENORQUE  = r'\<'
 
-from lexicalObject import *
-from sintacticObject import *
 import generator as g
+import ply.lex as lex
+import ply.yacc as yacc
+
+from expressions import *
+from instructions import *
+from LexicalObject import *
+from sintacticObject import *
+
 grammarList = []
 grammarList[:] = []
 sintacticErroList = []
@@ -162,14 +168,9 @@ def t_error(t):
     LexicalErrosList.append(lo)
     t.lexer.skip(1)
 
-import ply.lex as lex
 lexer = lex.lex()
 
 
-#sintactic
-#construction the ast
-from expressions import *
-from instructions import *
 
 primeravez = 0
 treeList = [] #list for save nodes
@@ -960,7 +961,6 @@ def p_error(t):
     sintacticErroList.append(so)
    
 
-import ply.yacc as yacc
 parser = yacc.yacc()
 
 def parse(input):
