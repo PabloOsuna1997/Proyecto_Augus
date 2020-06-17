@@ -845,21 +845,28 @@ class Ui_Augus(object):
                     self.msgBox.setIcon(QtWidgets.QMessageBox.Information)
                     self.msgBox.exec()
   
-
         except:
             self.msgBox = QtWidgets.QMessageBox()
             self.msgBox.setText("Empty Area.")
             self.msgBox.exec()
 
     def fn_Guardar(self):
-        #content to save
-        content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-        path = self.tabWidget.tabText(self.tabWidget.currentIndex())
-        #print(path)
-        print("writing to file.")
-        f=open(path,"w")
-        f.write(content)
-        f.close()
+        try:
+            #content to save
+            content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
+            path = self.tabWidget.tabText(self.tabWidget.currentIndex())
+            #print(path)
+            print("writing to file.")
+            f=open(path,"w")
+            f.write(content)
+            f.close()
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Archivo Guardado.")
+            self.msgBox.exec()
+        except:
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Empty Area.")
+            self.msgBox.exec()
     
     def fn_Guardar_Como(self):
         try:
@@ -874,8 +881,14 @@ class Ui_Augus(object):
 
             #updating title on the tab
             self.tabWidget.setTabText(self.tabWidget.currentIndex(), path)
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Archivo Guardado.")
+            self.msgBox.exec()
         except:
             print("closing file dialog")
+            self.msgBox = QtWidgets.QMessageBox()
+            self.msgBox.setText("Empty Area.")
+            self.msgBox.exec()
 
     def fn_Cerrar(self):
         self.tabWidget.removeTab(self.tabWidget.currentIndex())
