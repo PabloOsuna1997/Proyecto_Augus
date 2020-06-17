@@ -672,7 +672,7 @@ def grafo(instructions, textEdit):
     instrucciones(instructions, ge, contador,textEdit)
 
 def instrucciones(instructions, ge, padre, textEdit):
-    global  contador, tsGlobal
+    global  contador, tsGlobal, pasadas
      
     i = 0
     while i < len(instructions):
@@ -715,7 +715,17 @@ def instrucciones(instructions, ge, padre, textEdit):
             ge.add(node)
             contador += 2
             drawExpresiones(b.expression, ge, contador, tsGlobal,textEdit)
-            #mandar el node goto osea saltar entre las instrucciones 
+            #mandar el node goto osea saltar entre las instrucciones
+            '''result = valueExpression(b.expression, tsGlobal, textEdit)
+            if result == 1:
+                tmp = i
+                i = goto(i+1, instructions, b.label)
+                if i != 0:
+                    pasadas = 0
+                else:
+                    i = tmp
+            else:
+                i = tmp'''
         elif isinstance(b, Goto):
             node = g.node(padre, contador+1, 'INSTRUCIONES')
             ge.add(node)
@@ -725,7 +735,17 @@ def instrucciones(instructions, ge, padre, textEdit):
             node = g.node(contador, contador+2, str(b.label))
             ge.add(node)
             contador += 2
-            #saltar entre las instrucciones 
+            #saltar entre las instrucciones
+            '''result = valueExpression(b.expression, tsGlobal, textEdit)
+            if result == 1:
+                tmp = i
+                i = goto(i + 1, instructions, b.label)
+                if i != 0:
+                    pasadas = 0
+                else:
+                    i = tmp
+            else:
+                i = tmp'''
         elif isinstance(b, Exit):
             node = g.node(padre, contador+1, 'INSTRUCIONES')
             ge.add(node)
@@ -977,7 +997,6 @@ def drawExpresiones(instruction, ge, padre, ts, textEdit):
             sym = ts.get(instruction.id).valor            
             i = 0
             while i < len(instruction.expressions):
-                print(str(i))
                 node = g.node(padre, contador+1, f'[{str(valueExpression(instruction.expressions[i], ts,textEdit))}]')
                 ge.add(node)
                 contador +=1

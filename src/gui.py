@@ -712,7 +712,7 @@ class Ui_Augus(object):
             #endregion
 
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-            content += '\n'
+            content += '\n'            
             result = grammar.parse(content)
             global instructionsList
             instructionsList = result[:]
