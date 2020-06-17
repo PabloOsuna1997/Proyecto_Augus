@@ -646,6 +646,7 @@ class Ui_Augus(object):
 
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             content += '\n'
+            content.encode('utf-8')  #validation utf8
             result = grammar.parse(content)
             instructionsDebug = result[:]   #copio las instrucciones a la lista global
 
@@ -691,7 +692,7 @@ class Ui_Augus(object):
             self.msgBox.exec()
 
     def fn_Ejecutar_Ascendente(self):
-        try:
+        #try:
             #region initialization
             global banderaDescAsc
             banderaDescAsc = True
@@ -712,7 +713,12 @@ class Ui_Augus(object):
             #endregion
 
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
-            content += '\n'            
+            content += '\n'  
+            
+            #obser = unicode(content)
+            #content = content.decode('utf-8')
+            content.encode('utf-8')
+
             result = grammar.parse(content)
             global instructionsList
             instructionsList = result[:]
@@ -767,11 +773,11 @@ class Ui_Augus(object):
             sys.stdout.flush()
             #endregion
             
-        except:
-            self.msgBox = QtWidgets.QMessageBox()
-            self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-            self.msgBox.setText("Area Vacia.")
-            self.msgBox.exec()
+        #except:
+            #self.msgBox = QtWidgets.QMessageBox()
+            #self.msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+            #self.msgBox.setText("Area Vacia.")
+            #self.msgBox.exec()
     
     def fn_Ejecutar_Descendente(self):
         try:
@@ -793,6 +799,7 @@ class Ui_Augus(object):
             
             content = self.tabWidget.currentWidget().findChild(QtWidgets.QTextEdit,"textEdit").toPlainText()
             content += '\n'
+            content.encode('utf-8')  #validation utf8
             result = grammarDesc.parse(content)
             global instructionsList  #save a all instructions for posterior use in graph astGenreal
             instructionsList = result[:]
